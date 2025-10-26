@@ -1,0 +1,3 @@
+spring.thymeleaf.encoding=UTF-8
+spring.mvc.locale=ja
+server.port=8080
