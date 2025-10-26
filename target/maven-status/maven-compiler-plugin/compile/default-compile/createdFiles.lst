@@ -1,0 +1,4 @@
+com\example\foodmanager\controller\FoodController.class
+com\example\foodmanager\FoodManagerApplication.class
+com\example\foodmanager\repository\InMemoryFoodRepository.class
+com\example\foodmanager\model\Food.class
