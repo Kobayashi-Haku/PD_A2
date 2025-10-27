@@ -1,5 +1,5 @@
 ### **アプリ起動方法**
-ターミナルでmvn spring-boot:runを実行し、ブラウザでhttp://localhost:8080
+ターミナルで```mvn spring-boot:run```を実行し、ブラウザで<a href="http://localhost8080" target="_blank">ここをクリック</a>
 を開くとwebアプリが起動する。
 
 ### **ブランチをPCに保存する方法**
