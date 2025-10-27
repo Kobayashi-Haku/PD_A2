@@ -4,42 +4,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>食品消費期限管理</title>
+  <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+  <style>
+    .status-expired { color: #dc3545; }
+    .status-warning { color: #ffc107; }
+    .status-ok { color: #198754; }
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
 </head>
-<body>
-  <h1>食品消費期限管理</h1>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">食品消費期限管理</span>
+    </div>
+  </nav>
 
-  <p>登録食品数: <strong th:text="${count}"></strong>
-  / 期限切れ間近: <strong th:text="${warning}"></strong>
-  / 期限切れ: <strong th:text="${expired}"></strong></p>
+  <div class="container fade-in">
+    <div class="row mb-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <div class="row text-center">
+              <div class="col">
+                <h5 class="card-title">登録食品数</h5>
+                <p class="card-text h3" th:text="${count}">0</p>
+              </div>
+              <div class="col">
+                <h5 class="card-title">期限切れ間近</h5>
+                <p class="card-text h3 text-warning" th:text="${warning}">0</p>
+              </div>
+              <div class="col">
+                <h5 class="card-title">期限切れ</h5>
+                <p class="card-text h3 text-danger" th:text="${expired}">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <p><a href="/add">食品を追加</a></p>
+    <div class="row mb-4">
+      <div class="col">
+        <a href="/add" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i> 食品を追加
+        </a>
+      </div>
+    </div>
 
-  <table border="1" cellpadding="6">
-    <thead>
-      <tr><th>ID</th><th>名称</th><th>消費期限</th><th>状態</th><th>操作</th></tr>
-    </thead>
-    <tbody>
-      <tr th:each="f : ${foods}">
-        <td th:text="${f.id}"></td>
-        <td th:text="${f.name}"></td>
-        <td th:text="${f.expirationDate}"></td>
-        <td>
-          <span th:switch="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}">
-            <span th:case="*" th:unless="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate) < 0}">
-              <span th:if="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate) <= 3}">間近（残り<span th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}"></span>日）</span>
-              <span th:if="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate) > 3}">有効（残り<span th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}"></span>日）</span>
-            </span>
-            <span th:case="*" th:if="${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate) < 0}">期限切れ</span>
-          </span>
-        </td>
-        <td>
-          <form method="post" action="/delete" style="display:inline">
-            <input type="hidden" name="id" th:value="${f.id}" />
-            <button type="submit">削除</button>
-          </form>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>名称</th>
+            <th>消費期限</th>
+            <th>状態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="f : ${foods}">
+            <td th:text="${f.id}"></td>
+            <td th:text="${f.name}"></td>
+            <td th:text="${f.expirationDate}"></td>
+            <td>
+              <span th:with="days=${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}"
+                    th:class="${days < 0 ? 'status-expired' : (days <= 3 ? 'status-warning' : 'status-ok')}">
+                <span th:if="${days < 0}">
+                  <i class="bi bi-exclamation-triangle-fill"></i> 期限切れ
+                </span>
+                <span th:if="${days <= 3 && days >= 0}">
+                  <i class="bi bi-clock"></i> 間近（残り<span th:text="${days}"></span>日）
+                </span>
+                <span th:if="${days > 3}">
+                  <i class="bi bi-check-circle"></i> 有効（残り<span th:text="${days}"></span>日）
+                </span>
+              </span>
+            </td>
+            <td>
+              <form method="post" action="/delete" style="display:inline">
+                <input type="hidden" name="id" th:value="${f.id}" />
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i> 削除
+                </button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
 </body>
 </html>

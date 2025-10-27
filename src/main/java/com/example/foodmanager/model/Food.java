@@ -1,19 +1,24 @@
 package com.example.foodmanager.model;
 
+import jakarta.persistence.*;
+import lombok.Data;
 import java.time.LocalDate;
 
+@Data
+@Entity
+@Table(name = "foods")
 public class Food {
-    private final String id;
-    private final String name;
-    private final LocalDate expirationDate;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public Food(String id, String name, LocalDate expirationDate) {
-        this.id = id;
-        this.name = name;
-        this.expirationDate = expirationDate;
-    }
+    @Column(nullable = false)
+    private String name;
 
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public LocalDate getExpirationDate() { return expirationDate; }
+    @Column(nullable = false)
+    private LocalDate expirationDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

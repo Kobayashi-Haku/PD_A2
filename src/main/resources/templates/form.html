@@ -4,14 +4,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>食品追加</title>
+  <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+  <style>
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
 </head>
-<body>
-  <h1>食品を追加</h1>
-  <form method="post" action="/add">
-    <label>名称: <input type="text" name="name" required></label><br>
-    <label>消費期限 (YYYY-MM-DD): <input type="date" name="expirationDate" required></label><br>
-    <button type="submit">追加</button>
-  </form>
-  <p><a href="/">一覧に戻る</a></p>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">食品消費期限管理</span>
+    </div>
+  </nav>
+
+  <div class="container fade-in">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h5 class="card-title mb-0">食品を追加</h5>
+          </div>
+          <div class="card-body">
+            <form method="post" action="/add">
+              <div class="mb-3">
+                <label for="name" class="form-label">名称</label>
+                <input type="text" class="form-control" id="name" name="name" required
+                       placeholder="食品名を入力してください">
+              </div>
+              <div class="mb-3">
+                <label for="expirationDate" class="form-label">消費期限</label>
+                <input type="date" class="form-control" id="expirationDate" 
+                       name="expirationDate" required>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-plus-circle"></i> 追加
+                </button>
+                <a href="/" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
 </body>
 </html>

@@ -1,0 +1,13 @@
+# Normalize line endings and let Git handle EOL conversions
+* text=auto
+
+# Shell scripts should remain LF
+*.sh eol=lf
+
+# Batch files should use CRLF on Windows
+*.bat eol=crlf
+*.cmd eol=crlf
+
+# Force XML and properties to use LF in the repo
+*.xml text eol=lf
+*.properties text eol=lf

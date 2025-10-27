@@ -1,44 +1,73 @@
 package com.example.foodmanager.controller;
 
 import com.example.foodmanager.model.Food;
-import com.example.foodmanager.repository.InMemoryFoodRepository;
+import com.example.foodmanager.model.User;
+import com.example.foodmanager.repository.FoodRepository;
+import com.example.foodmanager.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/")
 public class FoodController {
-    private final InMemoryFoodRepository repo = new InMemoryFoodRepository();
+    private final FoodRepository foodRepository;
+    private final UserRepository userRepository;
+
+    public FoodController(FoodRepository foodRepository, UserRepository userRepository) {
+        this.foodRepository = foodRepository;
+        this.userRepository = userRepository;
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 
     @GetMapping
     public String index(Model model) {
-        model.addAttribute("foods", repo.findAll());
-        model.addAttribute("count", repo.count());
-        model.addAttribute("warning", repo.countWarning());
-        model.addAttribute("expired", repo.countExpired());
+        User currentUser = getCurrentUser();
+        LocalDate now = LocalDate.now();
+        LocalDate threeDaysLater = now.plusDays(3);
+
+        var foods = foodRepository.findByUser(currentUser);
+        var warning = foodRepository.findByUserAndExpirationDateBetween(currentUser, now, threeDaysLater);
+        var expired = foodRepository.findByUserAndExpirationDateBefore(currentUser, now);
+
+        model.addAttribute("foods", foods);
+        model.addAttribute("count", foods.size());
+        model.addAttribute("warning", warning.size());
+        model.addAttribute("expired", expired.size());
         return "list";
     }
 
     @GetMapping("/add")
-    public String addForm(Model model) {
-        model.addAttribute("food", new Food("", "", LocalDate.now()));
+    public String addForm() {
         return "form";
     }
 
     @PostMapping("/add")
     public String addSubmit(@RequestParam String name, @RequestParam String expirationDate) {
-        LocalDate d = LocalDate.parse(expirationDate);
-        repo.save(new Food(UUID.randomUUID().toString(), name, d));
+        User currentUser = getCurrentUser();
+        Food food = new Food();
+        food.setName(name);
+        food.setExpirationDate(LocalDate.parse(expirationDate));
+        food.setUser(currentUser);
+        foodRepository.save(food);
         return "redirect:/";
     }
 
     @PostMapping("/delete")
-    public String delete(@RequestParam String id) {
-        repo.deleteById(id);
+    public String delete(@RequestParam Long id) {
+        User currentUser = getCurrentUser();
+        foodRepository.findById(id)
+                .filter(food -> food.getUser().equals(currentUser))
+                .ifPresent(foodRepository::delete);
         return "redirect:/";
     }
 }

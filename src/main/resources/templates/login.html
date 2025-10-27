@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ログイン - 食品消費期限管理</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 40px auto;
+        }
+        .fade-in { animation: fadeIn 0.5s; }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container fade-in">
+        <div class="login-container">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">ログイン</h4>
+                </div>
+                <div class="card-body">
+                    <div th:if="${param.error}" class="alert alert-danger">
+                        ユーザー名またはパスワードが正しくありません
+                    </div>
+                    <div th:if="${param.logout}" class="alert alert-success">
+                        ログアウトしました
+                    </div>
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">ユーザー名</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">パスワード</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right"></i> ログイン
+                            </button>
+                            <a href="/register" class="btn btn-outline-secondary">
+                                <i class="bi bi-person-plus"></i> 新規登録
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+</body>
+</html>
