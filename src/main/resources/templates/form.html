@@ -28,7 +28,7 @@
             <h5 class="card-title mb-0">食品を追加</h5>
           </div>
           <div class="card-body">
-            <form method="post" action="/add">
+            <form method="post" action="/add" th:action="@{/add}">
               <div class="mb-3">
                 <label for="name" class="form-label">名称</label>
                 <input type="text" class="form-control" id="name" name="name" required

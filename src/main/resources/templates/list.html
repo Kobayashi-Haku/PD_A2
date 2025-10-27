@@ -1,5 +1,5 @@
 ﻿<!doctype html>
-<html lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -20,6 +20,24 @@
   <nav class="navbar navbar-dark bg-primary mb-4">
     <div class="container">
       <span class="navbar-brand mb-0 h1">食品消費期限管理</span>
+      <div class="navbar-nav ms-auto">
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i> <span sec:authentication="name">ユーザー</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+            <li><h6 class="dropdown-header">アカウント</h6></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="/logout" style="margin: 0;">
+                <button type="submit" class="dropdown-item">
+                  <i class="bi bi-box-arrow-right"></i> ログアウト
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </nav>
 

@@ -16,7 +16,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/register", "/css/**", "/js/**", "/webjars/**").permitAll()
+                .requestMatchers("/register", "/css/**", "/js/**", "/webjars/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -24,8 +24,10 @@ public class SecurityConfig {
                 .permitAll()
             )
             .logout(logout -> logout
+                .logoutSuccessUrl("/login?logout")
                 .permitAll()
-            );
+            )
+            .csrf(csrf -> csrf.disable()); // 開発用にCSRF保護を無効化
         
         return http.build();
     }

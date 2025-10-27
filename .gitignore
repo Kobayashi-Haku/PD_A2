@@ -18,3 +18,6 @@ release.properties
 
 # macOS
 .DS_Store
+
+# Database files (personal data)
+data/

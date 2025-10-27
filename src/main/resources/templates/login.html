@@ -28,6 +28,9 @@
                     <div th:if="${param.error}" class="alert alert-danger">
                         ユーザー名またはパスワードが正しくありません
                     </div>
+                    <div th:if="${param.registered}" class="alert alert-success">
+                        登録が完了しました。ログインしてください。
+                    </div>
                     <div th:if="${param.logout}" class="alert alert-success">
                         ログアウトしました
                     </div>
