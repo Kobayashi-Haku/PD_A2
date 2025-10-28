@@ -1,8 +1,8 @@
-### **GitHub上の既存リポジトリを、PCに持ってくる方法（これは始めの1回だけで良い）**
-PCにプロジェクト用フォルダを作成し、vscodeでそのフォルダを開く。ターミナルを開き、```git clone https://github.com/Kobayashi-Haku/PD_A2```を実行
+### **GitHub上のリポジトリをPCに接続する方法（これは始めの1回だけで良い）**
+PCにプロジェクト用フォルダを作成しvscodeでそのフォルダを開く。ターミナルを開き、```git clone https://github.com/Kobayashi-Haku/PD_A2```を実行
 
 ### **ブランチをPCに保存する方法**
-PCのプロジェクト用フォルダからターミナルを開き、以下のコマンドを実行  
+PCのプロジェクト用フォルダからターミナルを開き以下のコマンドを実行  
 ```git fetch```  
 ```git checkout ブランチ名```
 
@@ -18,6 +18,16 @@ PCのプロジェクト用フォルダからターミナルを開き、以下の
 まだの場合変更内容をコミットする（上記）  
 ```git checkout -b 新規ブランチ名```  
 ```git push -u origin 新規ブランチ名```
+
+### **大学内でpushする場合**  
+以下を実行してから```git push```  
+```git config --global http.proxy http://wwwproxy.kanazawa-it.ac.jp:8080```  
+```git config --global https.proxy http://wwwproxy.kanazawa-it.ac.jp:8080```  
+
+### **大学外でpushする場合**  
+以下を実行してから```git push```  
+```git config --global --unset http.proxy```  
+```git config --global --unset https.proxy```  
 
 ### **アプリ起動方法**
 プロジェクト用フォルダからターミナルを開き```mvn spring-boot:run```を実行し、ブラウザで`http://localhost:8080/`を開くとwebアプリが起動する。
