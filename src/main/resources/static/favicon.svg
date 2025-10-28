@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 背景円 -->
+  <circle cx="16" cy="16" r="15" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+  
+  <!-- 食品アイコン（りんご風） -->
+  <ellipse cx="16" cy="18" rx="8" ry="7" fill="#FF5722"/>
+  <ellipse cx="16" cy="17" rx="6" ry="5.5" fill="#FF7043"/>
+  
+  <!-- 葉っぱ -->
+  <ellipse cx="18" cy="10" rx="3" ry="2" fill="#4CAF50" transform="rotate(30 18 10)"/>
+  
+  <!-- ハイライト -->
+  <ellipse cx="13" cy="15" rx="2" ry="1.5" fill="#FFAB91" opacity="0.7"/>
+  
+  <!-- 期限管理を表す時計マーク -->
+  <circle cx="24" cy="8" r="4" fill="#FFC107" stroke="#FF8F00" stroke-width="1"/>
+  <line x1="24" y1="6" x2="24" y2="8" stroke="#FF8F00" stroke-width="1" stroke-linecap="round"/>
+  <line x1="24" y1="8" x2="25.5" y2="9" stroke="#FF8F00" stroke-width="1" stroke-linecap="round"/>
+</svg>
