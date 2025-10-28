@@ -3,6 +3,7 @@ package com.example.foodmanager.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -18,7 +19,18 @@ public class Food {
     @Column(nullable = false)
     private LocalDate expirationDate;
 
+    @Column(nullable = false)
+    private LocalDateTime registeredAt;
+
+    @Column(nullable = false)
+    private boolean notificationSent = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @PrePersist
+    protected void onCreate() {
+        registeredAt = LocalDateTime.now();
+    }
 }

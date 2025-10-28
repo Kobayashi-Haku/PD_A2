@@ -21,3 +21,6 @@ release.properties
 
 # Database files (personal data)
 data/
+
+# Environment variables (contains sensitive information)
+.env
