@@ -24,7 +24,7 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 ```git config --global http.proxy http://wwwproxy.kanazawa-it.ac.jp:8080```  
 ```git config --global https.proxy http://wwwproxy.kanazawa-it.ac.jp:8080```  
 
-## **大学外でpushする場合**  
+### **大学外でpushする場合**  
 以下を実行してから```git push```  
 ```git config --global --unset http.proxy```  
 ```git config --global --unset https.proxy```  
