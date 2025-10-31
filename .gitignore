@@ -9,7 +9,7 @@ release.properties
 # IDEs and editors
 .idea/
 *.iml
-.project
+.project        
 .classpath
 .settings/
 

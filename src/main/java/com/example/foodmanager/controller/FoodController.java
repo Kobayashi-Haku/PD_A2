@@ -104,6 +104,57 @@ public class FoodController {
         return "redirect:/";
     }
 
+    @GetMapping("/edit/{id}")
+    public String editForm(@PathVariable Long id, Model model) {
+        User currentUser = getCurrentUser();
+        Food food = foodRepository.findById(id)
+                .filter(f -> f.getUser().equals(currentUser))
+                .orElseThrow(() -> new RuntimeException("Food not found or access denied"));
+        
+        model.addAttribute("food", food);
+        return "edit";
+    }
+
+    @PostMapping("/update")
+    public String update(@RequestParam Long id, 
+                        @RequestParam String name, 
+                        @RequestParam String expirationDate) {
+        User currentUser = getCurrentUser();
+        Food food = foodRepository.findById(id)
+                .filter(f -> f.getUser().equals(currentUser))
+                .orElseThrow(() -> new RuntimeException("Food not found or access denied"));
+        
+        // 食品情報を更新
+        food.setName(name);
+        food.setExpirationDate(LocalDate.parse(expirationDate));
+        
+        // 消費期限が明日に変更された場合、即座に通知を送信
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        if (food.getExpirationDate().equals(tomorrow) && !food.isNotificationSent()) {
+            log.info("消費期限が明日に変更されました。即座通知を送信します - 食品: {}, ユーザー: {}", 
+                    food.getName(), currentUser.getUsername());
+            
+            try {
+                // 適切なメールサービスを使用して即座通知
+                if (notificationEnabled && emailService != null) {
+                    emailService.sendImmediateExpirationNotification(food);
+                } else if (mockEmailService != null) {
+                    mockEmailService.sendImmediateExpirationNotification(food);
+                }
+                
+                // 即座通知を送信したので、通知送信フラグをtrueに設定
+                food.setNotificationSent(true);
+                
+            } catch (Exception e) {
+                log.error("即座通知の送信に失敗しました - 食品: {}, ユーザー: {}", 
+                         food.getName(), currentUser.getUsername(), e);
+            }
+        }
+        
+        foodRepository.save(food);
+        return "redirect:/";
+    }
+
     @PostMapping("/delete")
     public String delete(@RequestParam Long id) {
         User currentUser = getCurrentUser();
