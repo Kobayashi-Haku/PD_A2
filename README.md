@@ -29,5 +29,6 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 ```git config --global --unset http.proxy```  
 ```git config --global --unset https.proxy```  
 
-### **アプリ起動方法**
+### **アプリ起動方法**  
+```https://maven.apache.org/download.cgi```のBinary zip archive	apache-maven-3.9.11-bin.zipをダウンロード  
 プロジェクト用フォルダからターミナルを開き```mvn spring-boot:run```を実行し、ブラウザで`http://localhost:8080/`を開くとwebアプリが起動する。
