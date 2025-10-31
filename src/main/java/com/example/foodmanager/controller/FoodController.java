@@ -6,7 +6,8 @@ import com.example.foodmanager.repository.FoodRepository;
 import com.example.foodmanager.repository.UserRepository;
 import com.example.foodmanager.service.EmailService;
 import com.example.foodmanager.service.MockEmailService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/")
-@Slf4j
 public class FoodController {
     private final FoodRepository foodRepository;
     private final UserRepository userRepository;
@@ -37,6 +37,8 @@ public class FoodController {
         this.foodRepository = foodRepository;
         this.userRepository = userRepository;
     }
+
+    private static final Logger log = LoggerFactory.getLogger(FoodController.class);
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

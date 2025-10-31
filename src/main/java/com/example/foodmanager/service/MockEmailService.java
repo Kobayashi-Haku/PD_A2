@@ -1,7 +1,8 @@
 package com.example.foodmanager.service;
 
 import com.example.foodmanager.model.Food;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +13,10 @@ import java.time.format.DateTimeFormatter;
  * 実際にメールを送信せず、ログに出力のみ行う
  */
 @Service
-@Slf4j
 @ConditionalOnProperty(name = "app.notification.enabled", havingValue = "false", matchIfMissing = true)
 public class MockEmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(MockEmailService.class);
 
     public void sendExpirationNotification(Food food) {
         log.info("=== モックメール送信 ===");

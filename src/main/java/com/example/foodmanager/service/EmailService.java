@@ -3,8 +3,8 @@ package com.example.foodmanager.service;
 import com.example.foodmanager.model.Food;
 import com.example.foodmanager.model.User;
 import com.example.foodmanager.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.SimpleMailMessage;
@@ -16,10 +16,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @ConditionalOnProperty(name = "app.notification.enabled", havingValue = "true", matchIfMissing = true)
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
@@ -29,6 +29,11 @@ public class EmailService {
     
     @Value("${spring.mail.password}")
     private String mailPassword;
+
+    public EmailService(JavaMailSender mailSender, UserRepository userRepository) {
+        this.mailSender = mailSender;
+        this.userRepository = userRepository;
+    }
 
     @PostConstruct
     public void init() {

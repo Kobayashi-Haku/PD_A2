@@ -2,7 +2,8 @@ package com.example.foodmanager.service;
 
 import com.example.foodmanager.model.Food;
 import com.example.foodmanager.repository.FoodRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Slf4j
 public class NotificationSchedulerService {
 
     private final FoodRepository foodRepository;
@@ -31,6 +31,8 @@ public class NotificationSchedulerService {
     public NotificationSchedulerService(FoodRepository foodRepository) {
         this.foodRepository = foodRepository;
     }
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationSchedulerService.class);
 
     /**
      * 毎日午前9時に実行される通知チェック
