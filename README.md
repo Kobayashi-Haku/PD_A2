@@ -33,5 +33,5 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 ```https://maven.apache.org/download.cgi```のBinary zip archive	apache-maven-3.9.11-bin.zipをダウンロード  
 プロジェクト用フォルダからターミナルを開き```mvn spring-boot:run```を実行し、ブラウザで`http://localhost:8080/`を開くとwebアプリが起動する。
 
-github copilot学生認証  
+### **github copilot学生認証**  
 ```https://github.com/education?locale=ja```
