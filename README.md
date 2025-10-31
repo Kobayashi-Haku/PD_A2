@@ -38,4 +38,3 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 
 ### **github copilot学生認証**  
 ```https://github.com/education?locale=ja```
->>>>>>> 1579121e1c0eb75aa768a09ea296a5863e2d61d2
