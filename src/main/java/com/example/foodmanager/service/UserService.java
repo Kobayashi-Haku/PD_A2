@@ -35,18 +35,15 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User registerUser(String username, String email, String password) {
+    public User registerUser(String username, String password) {
         if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already exists");
-        }
-        
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email already exists");
         }
 
         User user = new User();
         user.setUsername(username);
-        user.setEmail(email);
+        // Email is not collected during registration by design
+        user.setEmail(null);
         user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);
     }

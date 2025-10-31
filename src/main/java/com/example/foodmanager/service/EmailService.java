@@ -40,10 +40,14 @@ public class EmailService {
         log.info("EmailService initialized with:");
         log.info("Mail username: {}", mailUsername);
         log.info("Mail password length: {}", mailPassword != null ? mailPassword.length() : 0);
-        
-        // データベースから送信者メールアドレスを取得
-        String fromEmail = getFromEmailAddress();
-        log.info("From email (from database): {}", fromEmail);
+
+        // データベースから送信者メールアドレスを取得（例外が発生しても起動を止めない）
+        try {
+            String fromEmail = getFromEmailAddress();
+            log.info("From email (from database): {}", fromEmail);
+        } catch (Exception e) {
+            log.warn("Could not determine from-email from database: {}. Email sending may not work until DB schema is fixed.", e.getMessage());
+        }
     }
 
     /**
@@ -67,7 +71,12 @@ public class EmailService {
             
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(food.getUser().getEmail());
+            String to = food.getUser() != null ? food.getUser().getEmail() : null;
+            if (to == null || to.isBlank()) {
+                log.warn("ユーザーのメールアドレスが未設定のため通知を送信しません: {}", food.getUser() != null ? food.getUser().getUsername() : "unknown");
+                return;
+            }
+            message.setTo(to);
             message.setSubject("食品の賞味期限通知 - " + food.getName());
             
             String messageText = String.format(
@@ -102,7 +111,12 @@ public class EmailService {
             
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(food.getUser().getEmail());
+            String to = food.getUser() != null ? food.getUser().getEmail() : null;
+            if (to == null || to.isBlank()) {
+                log.warn("ユーザーのメールアドレスが未設定のため緊急通知を送信しません: {}", food.getUser() != null ? food.getUser().getUsername() : "unknown");
+                return;
+            }
+            message.setTo(to);
             message.setSubject("【緊急】明日が賞味期限！ - " + food.getName());
             
             String messageText = String.format(

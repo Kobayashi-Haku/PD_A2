@@ -19,8 +19,13 @@ public class MockEmailService {
     private static final Logger log = LoggerFactory.getLogger(MockEmailService.class);
 
     public void sendExpirationNotification(Food food) {
+        String to = food.getUser() != null ? food.getUser().getEmail() : null;
+        if (to == null || to.isBlank()) {
+            log.warn("宛先メールアドレスが設定されていません。モック送信をスキップします。ユーザー: {}", food.getUser() != null ? food.getUser().getUsername() : "unknown");
+            return;
+        }
         log.info("=== モックメール送信 ===");
-        log.info("宛先: {}", food.getUser().getEmail());
+        log.info("宛先: {}", to);
         log.info("件名: 食品の賞味期限通知 - {}", food.getName());
         
         String messageText = String.format(
@@ -42,8 +47,13 @@ public class MockEmailService {
     }
 
     public void sendImmediateExpirationNotification(Food food) {
+        String to = food.getUser() != null ? food.getUser().getEmail() : null;
+        if (to == null || to.isBlank()) {
+            log.warn("宛先メールアドレスが設定されていません。モック緊急送信をスキップします。ユーザー: {}", food.getUser() != null ? food.getUser().getUsername() : "unknown");
+            return;
+        }
         log.info("=== 緊急モックメール送信 ===");
-        log.info("宛先: {}", food.getUser().getEmail());
+        log.info("宛先: {}", to);
         log.info("件名: 【緊急】明日が賞味期限！ - {}", food.getName());
         
         String messageText = String.format(

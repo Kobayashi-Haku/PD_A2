@@ -28,11 +28,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public String registerUser(@RequestParam String username,
-                             @RequestParam String email,
                              @RequestParam String password,
                              Model model) {
         try {
-            userService.registerUser(username, email, password);
+            userService.registerUser(username, password);
             return "redirect:/login?registered";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
