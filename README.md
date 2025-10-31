@@ -29,38 +29,10 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 ```git config --global --unset http.proxy```  
 ```git config --global --unset https.proxy```  
 
-### **アプリ起動方法**
+### **アプリ起動方法**  
+```https://maven.apache.org/download.cgi```のBinary zip archive	apache-maven-3.9.11-bin.zipをダウンロード  
 プロジェクト用フォルダからターミナルを開き```mvn spring-boot:run```を実行し、ブラウザで`http://localhost:8080/`を開くとwebアプリが起動する。
 
-### **メール通知機能の設定方法**
-このアプリケーションは食品の消費期限通知をGmailで送信できます。
-
-#### 1. Gmail設定
-1. Googleアカウントで2段階認証を有効にする
-2. Googleアカウントの「セキュリティ」→「アプリパスワード」で新しいアプリパスワードを生成
-3. 16桁のアプリパスワードをメモしておく
-
-#### 2. 環境変数設定
-1. `.env.example`をコピーして`.env`ファイルを作成
-2. `.env`ファイルを開き、以下の値を実際の情報に変更：
-   ```
-   MAIL_USERNAME=あなたのGmailアドレス
-   MAIL_PASSWORD=16桁のアプリパスワード
-   ```
-
-#### 3. Windows環境での起動
-1. `setup-env.bat`を実行して環境変数を設定
-2. `mvn spring-boot:run`でアプリケーションを起動
-
-#### 4. 手動での環境変数設定（PowerShell）
-```powershell
-$env:MAIL_USERNAME="あなたのGmailアドレス"
-$env:MAIL_PASSWORD="16桁のアプリパスワード"
-mvn spring-boot:run
-```
-
-#### メール通知機能
-- 消費期限が翌日の食品を登録すると即座にメール通知
-- 毎日朝9時に消費期限が近い食品の一覧をメール送信
-
-**注意**: `.env`ファイルは個人の認証情報を含むため、GitHubにはpushされません。
+### **github copilot学生認証**  
+```https://github.com/education?locale=ja```
+>>>>>>> 1579121e1c0eb75aa768a09ea296a5863e2d61d2
