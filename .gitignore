@@ -24,3 +24,6 @@ data/
 
 # Environment variables (contains sensitive information)
 .env
+
+# Exclude specific documentation files
+README3.md
