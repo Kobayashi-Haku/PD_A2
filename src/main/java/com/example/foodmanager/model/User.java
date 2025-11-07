@@ -14,7 +14,10 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false, unique = true)
+    @Transient
+    // Email is optional and not persisted by default to avoid requiring the column
+    // in existing databases. The application intentionally does not force email
+    // collection during registration.
     private String email;
 
     @Column(nullable = false)
