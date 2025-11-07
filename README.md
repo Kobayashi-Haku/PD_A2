@@ -37,29 +37,5 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 ```https://maven.apache.org/download.cgi```のBinary zip archive	apache-maven-3.9.11-bin.zipをダウンロード
 プロジェクト用フォルダからターミナルを開き```mvn spring-boot:run```を実行し、ブラウザで`http://localhost:8080/`を開くとwebアプリが起動する。
 
-### **開発環境の重要な注意事項**
-#### **文字エンコーディング設定**
-- **必須**: すべてのJavaファイルはUTF-8エンコーディング（BOMなし）で保存してください
-- **VSCode**: EditorConfig拡張機能をインストールしてください（プロジェクトルートの`.editorconfig`が自動適用されます）
-- **エラー対処**: `\ufeff`や「不正な文字」エラーが出る場合は、ファイルをUTF-8（BOMなし）で保存し直してください
-
-#### **環境変数の設定**
-1. `.env.example`ファイルをコピーして`.env`ファイルを作成
-2. 以下の設定を入力：
-   - **MAIL_USERNAME**: Gmail アドレス
-   - **MAIL_PASSWORD**: Gmail アプリパスワード（16桁）
-   - **GEMINI_API_KEY**: Google AI Studio で取得したAPIキー
-
-#### **Gemini API設定手順**
-1. [Google AI Studio](https://makersuite.google.com/app/apikey) にアクセス
-2. 「Create API Key」をクリック
-3. 新しいプロジェクトを作成（または既存のプロジェクトを選択）
-4. 生成されたAPIキーを`.env`ファイルの`GEMINI_API_KEY`に設定
-
-#### **推奨VSCode拡張機能**
-- Extension Pack for Java
-- EditorConfig for VS Code
-- Spring Boot Extension Pack
-
 ### **github copilot学生認証**
 ```https://github.com/education?locale=ja```
