@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8">
@@ -16,7 +16,7 @@
       0% { opacity: 0; }
       100% { opacity: 1; }
     }
-    
+
     /* テーブル表示を大きくするスタイル */
     .food-table {
       font-size: 1.1rem;
@@ -46,7 +46,7 @@
     .food-date {
       font-size: 1.05rem;
     }
-    
+
     /* 統計カードも少し大きく */
     .stats-card .card-title {
       font-size: 1.1rem;
@@ -108,8 +108,11 @@
 
     <div class="row mb-4">
       <div class="col">
-        <a href="/add" class="btn btn-primary">
+        <a href="/add" class="btn btn-primary me-2">
           <i class="bi bi-plus-circle"></i> 食品を追加
+        </a>
+        <a href="/recipe/suggest" class="btn btn-success">
+          <i class="bi bi-lightbulb"></i> レシピ提案
         </a>
       </div>
     </div>

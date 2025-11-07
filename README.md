@@ -43,6 +43,19 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 - **VSCode**: EditorConfig拡張機能をインストールしてください（プロジェクトルートの`.editorconfig`が自動適用されます）
 - **エラー対処**: `\ufeff`や「不正な文字」エラーが出る場合は、ファイルをUTF-8（BOMなし）で保存し直してください
 
+#### **環境変数の設定**
+1. `.env.example`ファイルをコピーして`.env`ファイルを作成
+2. 以下の設定を入力：
+   - **MAIL_USERNAME**: Gmail アドレス
+   - **MAIL_PASSWORD**: Gmail アプリパスワード（16桁）
+   - **GEMINI_API_KEY**: Google AI Studio で取得したAPIキー
+
+#### **Gemini API設定手順**
+1. [Google AI Studio](https://makersuite.google.com/app/apikey) にアクセス
+2. 「Create API Key」をクリック
+3. 新しいプロジェクトを作成（または既存のプロジェクトを選択）
+4. 生成されたAPIキーを`.env`ファイルの`GEMINI_API_KEY`に設定
+
 #### **推奨VSCode拡張機能**
 - Extension Pack for Java
 - EditorConfig for VS Code
