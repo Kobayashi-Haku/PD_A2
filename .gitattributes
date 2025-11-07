@@ -11,3 +11,7 @@
 # Force XML and properties to use LF in the repo
 *.xml text eol=lf
 *.properties text eol=lf
+
+# Java files should use LF and be UTF-8 without BOM
+*.java text eol=lf
+*.class binary
