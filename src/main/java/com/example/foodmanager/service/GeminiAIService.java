@@ -29,13 +29,20 @@ public class GeminiAIService {
     }
 
     public Recipe generateRecipeFromIngredients(List<String> ingredients) {
+        System.out.println("=== Gemini API 呼び出し開始 ===");
+        System.out.println("API Key: " + (apiKey != null && !apiKey.isEmpty() ? "設定済み" : "未設定"));
+        System.out.println("API URL: " + apiUrl);
+
         if (apiKey == null || apiKey.isEmpty()) {
+            System.out.println("APIキーが未設定のため、ダミーレシピを返します");
             return createDummyRecipe(ingredients);
         }
 
         try {
+            System.out.println("API呼び出しを実行中...");
             String prompt = createPrompt(ingredients);
             String response = callGeminiAPI(prompt);
+            System.out.println("API呼び出し成功、レスポンスを解析中...");
             return parseRecipeFromResponse(response, ingredients);
         } catch (Exception e) {
             System.err.println("Gemini API呼び出しエラー: " + e.getMessage());
@@ -59,6 +66,8 @@ public class GeminiAIService {
     }
 
     private String callGeminiAPI(String prompt) {
+        System.out.println("プロンプト: " + prompt);
+
         Map<String, Object> requestBody = Map.of(
             "contents", List.of(
                 Map.of("parts", List.of(
@@ -67,6 +76,8 @@ public class GeminiAIService {
             )
         );
 
+        System.out.println("API URL: " + apiUrl + "?key=" + apiKey.substring(0, 10) + "...");
+
         Mono<String> responseMono = webClient.post()
             .uri(apiUrl + "?key=" + apiKey)
             .header("Content-Type", "application/json")
@@ -74,7 +85,9 @@ public class GeminiAIService {
             .retrieve()
             .bodyToMono(String.class);
 
-        return responseMono.block();
+        String response = responseMono.block();
+        System.out.println("API レスポンス: " + (response != null ? response.substring(0, Math.min(200, response.length())) + "..." : "null"));
+        return response;
     }
 
     private Recipe parseRecipeFromResponse(String response, List<String> ingredients) {
@@ -131,6 +144,7 @@ public class GeminiAIService {
     }
 
     private Recipe createDummyRecipe(List<String> ingredients) {
+        System.out.println("ダミーレシピを作成します");
         String ingredientList = String.join("、", ingredients);
         return new Recipe(
             ingredients.get(0) + "を使った簡単料理",
