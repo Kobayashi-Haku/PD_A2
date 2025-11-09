@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +27,39 @@ public class GeminiAIService {
     private final ObjectMapper objectMapper;
 
     public GeminiAIService() {
-        this.webClient = WebClient.builder().build();
+        // プロキシ設定を試す
+        HttpClient httpClient;
+
+        // システムプロパティからプロキシ設定を確認
+        String httpProxy = System.getProperty("http.proxyHost");
+        String httpProxyPort = System.getProperty("http.proxyPort");
+        String httpsProxy = System.getProperty("https.proxyHost");
+        String httpsProxyPort = System.getProperty("https.proxyPort");
+
+        System.out.println("=== プロキシ設定確認 ===");
+        System.out.println("HTTP Proxy: " + httpProxy + ":" + httpProxyPort);
+        System.out.println("HTTPS Proxy: " + httpsProxy + ":" + httpsProxyPort);
+
+        if (httpsProxy != null && httpsProxyPort != null) {
+            System.out.println("HTTPSプロキシを設定中...");
+            httpClient = HttpClient.create()
+                .proxy(proxy -> proxy.type(ProxyProvider.Proxy.HTTP)
+                    .host(httpsProxy)
+                    .port(Integer.parseInt(httpsProxyPort)));
+        } else if (httpProxy != null && httpProxyPort != null) {
+            System.out.println("HTTPプロキシを設定中...");
+            httpClient = HttpClient.create()
+                .proxy(proxy -> proxy.type(ProxyProvider.Proxy.HTTP)
+                    .host(httpProxy)
+                    .port(Integer.parseInt(httpProxyPort)));
+        } else {
+            System.out.println("プロキシ設定なしで接続を試みます");
+            httpClient = HttpClient.create();
+        }
+
+        this.webClient = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .build();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -41,11 +76,18 @@ public class GeminiAIService {
         try {
             System.out.println("API呼び出しを実行中...");
             String prompt = createPrompt(ingredients);
+
+            // 無料プランのレート制限対応：少し待機
+            Thread.sleep(1000); // 1秒待機
+
             String response = callGeminiAPI(prompt);
             System.out.println("API呼び出し成功、レスポンスを解析中...");
-            return parseRecipeFromResponse(response, ingredients);
+            Recipe result = parseRecipeFromResponse(response, ingredients);
+            System.out.println("レシピ解析完了: " + result.getTitle());
+            return result;
         } catch (Exception e) {
             System.err.println("Gemini API呼び出しエラー: " + e.getMessage());
+            e.printStackTrace(); // スタックトレースも表示
             return createDummyRecipe(ingredients);
         }
     }
@@ -68,11 +110,34 @@ public class GeminiAIService {
     private String callGeminiAPI(String prompt) {
         System.out.println("プロンプト: " + prompt);
 
+        // ネットワーク接続テスト
+        System.out.println("=== ネットワーク接続テスト ===");
+        try {
+            String testResponse = webClient.get()
+                .uri("https://www.google.com")
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+            System.out.println("Google接続テスト: 成功");
+        } catch (Exception e) {
+            System.err.println("Google接続テスト: 失敗 - " + e.getMessage());
+            System.err.println("これはプロキシまたはネットワークの問題を示しています");
+        }
+
+        // Gemini API v1beta用のリクエスト形式
         Map<String, Object> requestBody = Map.of(
             "contents", List.of(
-                Map.of("parts", List.of(
-                    Map.of("text", prompt)
-                ))
+                Map.of(
+                    "parts", List.of(
+                        Map.of("text", prompt)
+                    )
+                )
+            ),
+            "generationConfig", Map.of(
+                "temperature", 0.7,
+                "topK", 1,
+                "topP", 1,
+                "maxOutputTokens", 2048
             )
         );
 
@@ -81,8 +146,19 @@ public class GeminiAIService {
         Mono<String> responseMono = webClient.post()
             .uri(apiUrl + "?key=" + apiKey)
             .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
             .bodyValue(requestBody)
             .retrieve()
+            .onStatus(httpStatus -> httpStatus.is4xxClientError() || httpStatus.is5xxServerError(),
+                clientResponse -> {
+                    System.err.println("HTTP Error: " + clientResponse.statusCode());
+                    return clientResponse.bodyToMono(String.class)
+                        .map(errorBody -> {
+                            System.err.println("Error response body: " + errorBody);
+                            return new RuntimeException("API Error: " + clientResponse.statusCode() + " - " + errorBody);
+                        });
+                })
             .bodyToMono(String.class);
 
         String response = responseMono.block();
@@ -91,9 +167,22 @@ public class GeminiAIService {
     }
 
     private Recipe parseRecipeFromResponse(String response, List<String> ingredients) {
+        System.out.println("レスポンス解析開始...");
         try {
+            if (response == null || response.trim().isEmpty()) {
+                System.err.println("API レスポンスが空です");
+                return createDummyRecipe(ingredients);
+            }
+
             JsonNode rootNode = objectMapper.readTree(response);
+            System.out.println("JSON解析成功");
+
             JsonNode candidatesNode = rootNode.get("candidates");
+            if (candidatesNode == null) {
+                System.err.println("candidates ノードが見つかりません");
+                System.err.println("完全なレスポンス: " + response);
+                return createDummyRecipe(ingredients);
+            }
 
             if (candidatesNode != null && candidatesNode.isArray() && candidatesNode.size() > 0) {
                 JsonNode contentNode = candidatesNode.get(0).get("content");
