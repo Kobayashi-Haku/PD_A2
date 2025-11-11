@@ -1,0 +1,24 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.5.11-hotspot"
+        }
+    ],
+    "java.configuration.detectJdksAtStart": true,
+    "java.import.maven.enabled": true,
+    "java.eclipse.downloadSources": true,
+    "java.maven.downloadSources": true,
+    "java.debug.settings.enableRunDebugCodeLens": false,
+    "java.codeGeneration.insertionLocation": "afterCursor",
+    "java.import.gradle.enabled": false,
+    "files.exclude": {
+        "**/target": true,
+        "**/.mvn": true
+    },
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true
+}
