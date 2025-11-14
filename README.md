@@ -41,5 +41,5 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 ```https://github.com/education?locale=ja```
 
 ### **GeminiAPIキー取得方法**  
-[ここをクリック](https://zenn.dev/ma_ro/articles/49b67565462299)この記事の5までやる  
+<a href="https://zenn.dev/ma_ro/articles/49b67565462299" target="_blank">zenn</a>この記事の5までやる  
 自分のPCのプロジェクトフォルダに.envという名前のファイルを作って```GEMINI_API_KEY=ここにAPIKEYを貼る```この一行を書く
