@@ -3,6 +3,7 @@ package com.example.foodmanager.controller;
 import com.example.foodmanager.model.Food;
 import com.example.foodmanager.model.User;
 import com.example.foodmanager.repository.FoodRepository;
+import com.example.foodmanager.repository.SavedRecipeRepository; // 追加
 import com.example.foodmanager.repository.UserRepository;
 import com.example.foodmanager.service.EmailService;
 import com.example.foodmanager.service.MockEmailService;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 public class FoodController {
     private final FoodRepository foodRepository;
     private final UserRepository userRepository;
+    private final SavedRecipeRepository savedRecipeRepository; // 追加
     
     @Autowired(required = false)
     private EmailService emailService;
@@ -33,9 +35,11 @@ public class FoodController {
     @Value("${app.notification.enabled:false}")
     private boolean notificationEnabled;
 
-    public FoodController(FoodRepository foodRepository, UserRepository userRepository) {
+    // コンストラクタを修正（SavedRecipeRepositoryを追加）
+    public FoodController(FoodRepository foodRepository, UserRepository userRepository, SavedRecipeRepository savedRecipeRepository) {
         this.foodRepository = foodRepository;
         this.userRepository = userRepository;
+        this.savedRecipeRepository = savedRecipeRepository;
     }
 
     private User getCurrentUser() {
@@ -50,9 +54,14 @@ public class FoodController {
         LocalDate now = LocalDate.now();
         LocalDate threeDaysLater = now.plusDays(3);
 
-        var foods = foodRepository.findByUser(currentUser);
+        var foods = foodRepository.findByUserOrderByExpirationDateAsc(currentUser);
         var warning = foodRepository.findByUserAndExpirationDateBetween(currentUser, now, threeDaysLater);
         var expired = foodRepository.findByUserAndExpirationDateBefore(currentUser, now);
+
+        // ▼▼▼ ここが重要：保存したレシピを取得して画面に渡す ▼▼▼
+        var savedRecipes = savedRecipeRepository.findByUserOrderBySavedAtDesc(currentUser);
+        model.addAttribute("savedRecipes", savedRecipes);
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         model.addAttribute("foods", foods);
         model.addAttribute("count", foods.size());
@@ -74,30 +83,21 @@ public class FoodController {
         food.setExpirationDate(LocalDate.parse(expirationDate));
         food.setUser(currentUser);
         
-        // 食品を保存
         Food savedFood = foodRepository.save(food);
         
-        // 消費期限が明日の場合、即座に通知を送信
+        // 即座通知ロジック
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         if (savedFood.getExpirationDate().equals(tomorrow)) {
-            log.info("消費期限が明日の食品が登録されました。即座通知を送信します - 食品: {}, ユーザー: {}", 
-                    savedFood.getName(), currentUser.getUsername());
-            
             try {
-                // 適切なメールサービスを使用して即座通知
                 if (notificationEnabled && emailService != null) {
                     emailService.sendImmediateExpirationNotification(savedFood);
                 } else if (mockEmailService != null) {
                     mockEmailService.sendImmediateExpirationNotification(savedFood);
                 }
-                
-                // 即座通知を送信したので、通知送信フラグをtrueに設定
                 savedFood.setNotificationSent(true);
                 foodRepository.save(savedFood);
-                
             } catch (Exception e) {
-                log.error("即座通知の送信に失敗しました - 食品: {}, ユーザー: {}", 
-                         savedFood.getName(), currentUser.getUsername(), e);
+                log.error("即座通知失敗", e);
             }
         }
         
@@ -124,30 +124,21 @@ public class FoodController {
                 .filter(f -> f.getUser().equals(currentUser))
                 .orElseThrow(() -> new RuntimeException("Food not found or access denied"));
         
-        // 食品情報を更新
         food.setName(name);
         food.setExpirationDate(LocalDate.parse(expirationDate));
         
-        // 消費期限が明日に変更された場合、即座に通知を送信
+        // 更新時の即座通知ロジック
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         if (food.getExpirationDate().equals(tomorrow) && !food.isNotificationSent()) {
-            log.info("消費期限が明日に変更されました。即座通知を送信します - 食品: {}, ユーザー: {}", 
-                    food.getName(), currentUser.getUsername());
-            
             try {
-                // 適切なメールサービスを使用して即座通知
                 if (notificationEnabled && emailService != null) {
                     emailService.sendImmediateExpirationNotification(food);
                 } else if (mockEmailService != null) {
                     mockEmailService.sendImmediateExpirationNotification(food);
                 }
-                
-                // 即座通知を送信したので、通知送信フラグをtrueに設定
                 food.setNotificationSent(true);
-                
             } catch (Exception e) {
-                log.error("即座通知の送信に失敗しました - 食品: {}, ユーザー: {}", 
-                         food.getName(), currentUser.getUsername(), e);
+                log.error("更新時即座通知失敗", e);
             }
         }
         

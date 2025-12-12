@@ -1,225 +1,178 @@
 <!doctype html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>レシピ提案 - 食品消費期限管理</title>
-  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
-  <link rel="icon" type="image/svg+xml" sizes="16x16" th:href="@{/favicon-16x16.svg}">
-  <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
-  <style>
-    .fade-in { animation: fadeIn 0.5s; }
-    @keyframes fadeIn {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-    .food-item {
-      margin-bottom: 10px;
-    }
-    .food-checkbox {
-      transform: scale(1.2);
-      margin-right: 10px;
-    }
-    .recipe-result {
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      display: none;
-    }
-    .loading-spinner {
-      display: none;
-      text-align: center;
-      margin: 20px 0;
-    }
-    .recipe-section {
-      margin-bottom: 15px;
-    }
-    .recipe-section h6 {
-      color: #495057;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .recipe-instructions {
-      white-space: pre-line;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AIレシピ提案</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <style>
+        .fade-in { animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .loading-spinner { display: none; }
+        .recipe-card { display: none; }
+    </style>
 </head>
 <body class="bg-light">
-  <nav class="navbar navbar-dark bg-primary mb-4">
-    <div class="container">
-      <a class="navbar-brand" href="/">食品消費期限管理</a>
-      <div class="navbar-nav ms-auto">
-        <div class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle"></i> <span sec:authentication="name">ユーザー</span>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-            <li><h6 class="dropdown-header">アカウント</h6></li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <form method="post" action="/logout" style="margin: 0;">
-                <button type="submit" class="dropdown-item">
-                  <i class="bi bi-box-arrow-right"></i> ログアウト
-                </button>
-              </form>
-            </li>
-          </ul>
+    <nav class="navbar navbar-dark bg-success mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1"><i class="bi bi-robot"></i> AIレシピ提案</span>
+            <a href="/" class="btn btn-outline-light btn-sm">一覧に戻る</a>
         </div>
-      </div>
-    </div>
-  </nav>
+    </nav>
 
-  <div class="container fade-in">
-    <div class="row">
-      <div class="col-md-8 mx-auto">
-        <div class="card shadow-sm">
-          <div class="card-header">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-lightbulb"></i> レシピ提案
-            </h5>
-          </div>
-          <div class="card-body">
-            <p class="text-muted">使いたい食材を選択して、AIにレシピを提案してもらいましょう！</p>
-
-            <form id="recipeForm">
-              <div class="mb-4">
-                <h6>利用可能な食材を選択してください：</h6>
-                <div class="row">
-                  <div class="col-md-6" th:each="food : ${foods}">
-                    <div class="form-check food-item">
-                      <input class="form-check-input food-checkbox" type="checkbox"
-                             th:id="'food_' + ${food.id}" th:value="${food.id}" name="selectedFoodIds">
-                      <label class="form-check-label" th:for="'food_' + ${food.id}">
-                        <span th:text="${food.name}"></span>
-                        <small class="text-muted">
-                          (期限: <span th:text="${food.expirationDate}"></span>)
-                        </small>
-                      </label>
+    <div class="container fade-in">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                
+                <div class="card shadow-sm mb-4" id="selectionCard">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">使いたい食材を選んでください</h5>
                     </div>
-                  </div>
+                    <div class="card-body">
+                        <div th:if="${foods.isEmpty()}" class="alert alert-warning">
+                            食品が登録されていません。<a href="/add">食品を追加</a>してください。
+                        </div>
+                        
+                        <form id="recipeForm" th:unless="${foods.isEmpty()}">
+                            <div class="mb-3">
+                                <div class="list-group">
+                                    <label class="list-group-item" th:each="food : ${foods}">
+                                        <input class="form-check-input me-1" type="checkbox" 
+                                               name="selectedFoodIds" th:value="${food.id}">
+                                        <span th:text="${food.name}">食品名</span>
+                                        <small class="text-muted ms-2" th:text="'(期限: ' + ${food.expirationDate} + ')'"></small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-success btn-lg" onclick="generateRecipe()">
+                                    <i class="bi bi-stars"></i> レシピを生成する
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-              </div>
 
-              <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
-                  <i class="bi bi-magic"></i> レシピを生成
-                </button>
-                <a href="/" class="btn btn-outline-secondary">
-                  <i class="bi bi-arrow-left"></i> 食品一覧に戻る
-                </a>
-              </div>
-            </form>
+                <div id="loading" class="text-center py-5 loading-spinner">
+                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 class="mt-3 text-muted">AIがレシピを考えています...</h4>
+                    <p>これには数秒〜10秒ほどかかります</p>
+                </div>
 
-            <div class="loading-spinner" id="loadingSpinner">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">レシピを生成中...</span>
-              </div>
-              <p class="mt-2">AIがレシピを考案中です。しばらくお待ちください...</p>
+                <div id="resultCard" class="card shadow recipe-card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0" id="recipeTitle">料理名</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="badge bg-light text-dark border me-2">
+                                <i class="bi bi-clock"></i> <span id="cookingTime"></span>
+                            </span>
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-bar-chart"></i> <span id="difficulty"></span>
+                            </span>
+                        </div>
+
+                        <h5 class="border-bottom pb-2"><i class="bi bi-basket"></i> 材料</h5>
+                        <p id="ingredients" class="mb-4" style="white-space: pre-wrap;"></p>
+
+                        <h5 class="border-bottom pb-2"><i class="bi bi-list-ol"></i> 作り方</h5>
+                        <p id="instructions" style="white-space: pre-wrap;"></p>
+
+                        <div class="d-grid gap-2 mt-4 pt-3 border-top">
+                            <form method="post" action="/recipe/save" id="saveRecipeForm">
+                                <input type="hidden" name="title" id="hiddenTitle">
+                                <input type="hidden" name="ingredients" id="hiddenIngredients">
+                                <input type="hidden" name="instructions" id="hiddenInstructions">
+                                <input type="hidden" name="cookingTime" id="hiddenCookingTime">
+                                <input type="hidden" name="difficulty" id="hiddenDifficulty">
+                                
+                                <button type="submit" class="btn btn-warning text-dark w-100 fw-bold">
+                                    <i class="bi bi-star-fill"></i> このレシピをお気に入りに保存
+                                </button>
+                            </form>
+
+                            <button type="button" class="btn btn-outline-success" onclick="resetForm()">
+                                <i class="bi bi-arrow-clockwise"></i> 別のレシピを考える
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="errorAlert" class="alert alert-danger mt-3" style="display: none;">
+                    <strong>エラー:</strong> <span id="errorMessage"></span>
+                </div>
+
             </div>
-
-            <div class="recipe-result" id="recipeResult">
-              <h5 class="text-primary mb-3">
-                <i class="bi bi-clipboard-check"></i> 提案レシピ
-              </h5>
-
-              <div class="recipe-section">
-                <h6><i class="bi bi-bookmark"></i> 料理名</h6>
-                <p id="recipeTitle" class="fw-bold"></p>
-              </div>
-
-              <div class="recipe-section">
-                <h6><i class="bi bi-list-ul"></i> 材料</h6>
-                <p id="recipeIngredients"></p>
-              </div>
-
-              <div class="recipe-section">
-                <h6><i class="bi bi-list-ol"></i> 作り方</h6>
-                <p id="recipeInstructions" class="recipe-instructions"></p>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="recipe-section">
-                    <h6><i class="bi bi-clock"></i> 調理時間</h6>
-                    <p id="recipeCookingTime"></p>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="recipe-section">
-                    <h6><i class="bi bi-bar-chart"></i> 難易度</h6>
-                    <p id="recipeDifficulty"></p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="d-grid gap-2 mt-3">
-                <button type="button" class="btn btn-success" onclick="generateNewRecipe()">
-                  <i class="bi bi-arrow-clockwise"></i> 別のレシピを生成
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        function generateRecipe() {
+            // チェックボックスの確認
+            const checkboxes = document.querySelectorAll('input[name="selectedFoodIds"]:checked');
+            if (checkboxes.length === 0) {
+                alert("食材を少なくとも1つ選んでください");
+                return;
+            }
 
-  <script>
-    document.getElementById('recipeForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+            // UI切り替え
+            document.getElementById('selectionCard').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
 
-      const checkboxes = document.querySelectorAll('input[name="selectedFoodIds"]:checked');
-      if (checkboxes.length === 0) {
-        alert('レシピを生成するには、少なくとも1つの食材を選択してください。');
-        return;
-      }
+            // データ準備
+            const formData = new FormData(document.getElementById('recipeForm'));
 
-      const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            // 送信
+            fetch('/recipe/generate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('レシピ生成に失敗しました');
+                return response.json();
+            })
+            .then(recipe => {
+                // 1. 画面に表示する
+                document.getElementById('recipeTitle').textContent = recipe.title;
+                document.getElementById('cookingTime').textContent = recipe.cookingTime;
+                document.getElementById('difficulty').textContent = recipe.difficulty;
+                document.getElementById('ingredients').textContent = recipe.ingredients;
+                document.getElementById('instructions').textContent = recipe.instructions;
 
-      // UIの状態を更新
-      document.getElementById('generateBtn').disabled = true;
-      document.getElementById('loadingSpinner').style.display = 'block';
-      document.getElementById('recipeResult').style.display = 'none';
+                // 2. ★重要★ 保存用フォームの隠し項目にデータをコピーする
+                // これがないと、保存ボタンを押しても「空っぽ」で保存されてしまいます
+                document.getElementById('hiddenTitle').value = recipe.title;
+                document.getElementById('hiddenIngredients').value = recipe.ingredients;
+                document.getElementById('hiddenInstructions').value = recipe.instructions;
+                document.getElementById('hiddenCookingTime').value = recipe.cookingTime;
+                document.getElementById('hiddenDifficulty').value = recipe.difficulty;
 
-      // APIリクエスト
-      const formData = new FormData();
-      selectedIds.forEach(id => formData.append('selectedFoodIds', id));
+                // 完了後の表示切り替え
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('resultCard').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('selectionCard').style.display = 'block';
+                document.getElementById('errorAlert').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'エラーが発生しました。もう一度お試しください。';
+            });
+        }
 
-      fetch('/recipe/generate', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(recipe => {
-        // レシピ結果を表示
-        document.getElementById('recipeTitle').textContent = recipe.title;
-        document.getElementById('recipeIngredients').textContent = recipe.ingredients;
-        document.getElementById('recipeInstructions').textContent = recipe.instructions;
-        document.getElementById('recipeCookingTime').textContent = recipe.cookingTime;
-        document.getElementById('recipeDifficulty').textContent = recipe.difficulty;
-
-        // UI状態をリセット
-        document.getElementById('loadingSpinner').style.display = 'none';
-        document.getElementById('recipeResult').style.display = 'block';
-        document.getElementById('generateBtn').disabled = false;
-      })
-      .catch(error => {
-        console.error('エラー:', error);
-        alert('レシピの生成中にエラーが発生しました。もう一度お試しください。');
-        document.getElementById('loadingSpinner').style.display = 'none';
-        document.getElementById('generateBtn').disabled = false;
-      });
-    });
-
-    function generateNewRecipe() {
-      document.getElementById('recipeResult').style.display = 'none';
-      // チェックボックスをリセット
-      document.querySelectorAll('input[name="selectedFoodIds"]').forEach(cb => cb.checked = false);
-    }
-  </script>
+        function resetForm() {
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('selectionCard').style.display = 'block';
+            // フォームのリセットは任意（チェックボックスを残したければ何もしない）
+        }
+    </script>
 </body>
 </html>

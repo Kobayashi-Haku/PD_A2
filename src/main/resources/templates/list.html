@@ -5,73 +5,46 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>食品消費期限管理</title>
   <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
-  <link rel="icon" type="image/svg+xml" sizes="16x16" th:href="@{/favicon-16x16.svg}">
   <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
   <style>
     .status-expired { color: #dc3545; }
     .status-warning { color: #ffc107; }
     .status-ok { color: #198754; }
     .fade-in { animation: fadeIn 0.5s; }
-    @keyframes fadeIn {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* テーブル表示を大きくするスタイル */
-    .food-table {
-      font-size: 1.1rem;
-    }
-    .food-table th {
-      font-size: 1.2rem;
-      font-weight: 600;
-      padding: 15px 12px;
-    }
-    .food-table td {
-      padding: 12px;
-      vertical-align: middle;
-      line-height: 1.6;
-    }
-    .food-table .btn {
-      font-size: 0.95rem;
-      padding: 8px 16px;
-    }
-    .status-badge {
-      font-size: 1rem;
-      font-weight: 500;
-    }
-    .food-name {
-      font-weight: 500;
-      font-size: 1.15rem;
-    }
-    .food-date {
-      font-size: 1.05rem;
-    }
-
-    /* 統計カードも少し大きく */
-    .stats-card .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-    .stats-card .card-text {
-      font-size: 2.5rem;
-    }
+    /* テーブルを見やすく */
+    .food-table { font-size: 1.1rem; }
+    .food-table th { font-size: 1.1rem; font-weight: 600; padding: 15px 12px; }
+    .food-table td { padding: 12px; vertical-align: middle; }
+    .food-name { font-weight: 500; font-size: 1.15rem; }
+    
+    /* 歯車アイコンの調整 */
+    .settings-icon { font-size: 1.3rem; margin-right: 15px; color: rgba(255,255,255,0.8); }
+    .settings-icon:hover { color: #fff; }
   </style>
 </head>
 <body class="bg-light">
+  
   <nav class="navbar navbar-dark bg-primary mb-4">
     <div class="container">
       <span class="navbar-brand mb-0 h1">食品消費期限管理</span>
-      <div class="navbar-nav ms-auto">
-        <div class="nav-item dropdown">
+      
+      <div class="d-flex align-items-center">
+        <a href="/settings" class="settings-icon" title="通知設定">
+          <i class="bi bi-gear-fill"></i>
+        </a>
+
+        <div class="dropdown">
           <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle"></i> <span sec:authentication="name">ユーザー</span>
+            <i class="bi bi-person-circle" style="font-size: 1.3rem;"></i>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-            <li><h6 class="dropdown-header">アカウント</h6></li>
+            <li><h6 class="dropdown-header"><span sec:authentication="name">ユーザー</span> 様</h6></li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form method="post" action="/logout" style="margin: 0;">
-                <button type="submit" class="dropdown-item">
+                <button type="submit" class="dropdown-item text-danger">
                   <i class="bi bi-box-arrow-right"></i> ログアウト
                 </button>
               </form>
@@ -85,29 +58,6 @@
   <div class="container fade-in">
     <div class="row mb-4">
       <div class="col">
-        <div class="card stats-card">
-          <div class="card-body">
-            <div class="row text-center">
-              <div class="col">
-                <h5 class="card-title">登録食品数</h5>
-                <p class="card-text h3" th:text="${count}">0</p>
-              </div>
-              <div class="col">
-                <h5 class="card-title">期限切れ間近</h5>
-                <p class="card-text h3 text-warning" th:text="${warning}">0</p>
-              </div>
-              <div class="col">
-                <h5 class="card-title">期限切れ</h5>
-                <p class="card-text h3 text-danger" th:text="${expired}">0</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row mb-4">
-      <div class="col">
         <a href="/add" class="btn btn-primary me-2">
           <i class="bi bi-plus-circle"></i> 食品を追加
         </a>
@@ -117,54 +67,144 @@
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover food-table">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>名称</th>
-            <th>消費期限</th>
-            <th>状態</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="f : ${foods}">
-            <td th:text="${f.id}"></td>
-            <td class="food-name" th:text="${f.name}"></td>
-            <td class="food-date" th:text="${f.expirationDate}"></td>
-            <td>
-              <span th:with="days=${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}"
-                    th:class="${days < 0 ? 'status-expired status-badge' : (days <= 3 ? 'status-warning status-badge' : 'status-ok status-badge')}">
-                <span th:if="${days < 0}">
-                  <i class="bi bi-exclamation-triangle-fill"></i> 期限切れ
-                </span>
-                <span th:if="${days <= 3 && days >= 0}">
-                  <i class="bi bi-clock"></i> 間近（残り<span th:text="${days}"></span>日）
-                </span>
-                <span th:if="${days > 3}">
-                  <i class="bi bi-check-circle"></i> 有効（残り<span th:text="${days}"></span>日）
-                </span>
-              </span>
-            </td>
-            <td>
-              <a th:href="@{/edit/{id}(id=${f.id})}" class="btn btn-warning btn-sm me-2">
-                <i class="bi bi-pencil"></i> 編集
-              </a>
-              <form method="post" action="/delete" style="display:inline">
-                <input type="hidden" name="id" th:value="${f.id}" />
-                <button type="submit" class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i> 削除
+    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>エラー:</strong> <span th:text="${param.error == 'limit_reached' ? 'レシピの保存は10件までです。' : 'エラーが発生しました。'}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${param.saved}" class="alert alert-success alert-dismissible fade show" role="alert">
+      レシピを保存しました！
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="foods-tab" data-bs-toggle="tab" data-bs-target="#foods" type="button" role="tab" aria-controls="foods" aria-selected="true">
+          <i class="bi bi-basket"></i> 食品一覧
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="false">
+          <i class="bi bi-journal-bookmark"></i> お気に入りレシピ
+          <span class="badge bg-secondary" th:text="${savedRecipes != null ? savedRecipes.size() : 0}">0</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+      
+      <div class="tab-pane fade show active" id="foods" role="tabpanel" aria-labelledby="foods-tab">
+        <div class="table-responsive">
+          <table class="table table-hover food-table">
+            <thead class="table-light">
+              <tr>
+                <th>名称</th>
+                <th>消費期限</th>
+                <th>状態</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="f : ${foods}">
+                <td class="food-name" th:text="${f.name}"></td>
+                <td class="food-date" th:text="${f.expirationDate != null ? f.expirationDate : '未設定'}"></td>
+                <td>
+                  <th:block th:if="${f.expirationDate != null}">
+                    <span th:with="days=${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}"
+                          th:class="${days < 0 ? 'status-expired status-badge' : (days <= 3 ? 'status-warning status-badge' : 'status-ok status-badge')}">
+                      <span th:if="${days < 0}">
+                        <i class="bi bi-exclamation-triangle-fill"></i> 期限切れ
+                      </span>
+                      <span th:if="${days <= 3 && days >= 0}">
+                        <i class="bi bi-clock"></i> 間近（残り<span th:text="${days}"></span>日）
+                      </span>
+                      <span th:if="${days > 3}">
+                        <i class="bi bi-check-circle"></i> 有効（残り<span th:text="${days}"></span>日）
+                      </span>
+                    </span>
+                  </th:block>
+                  <th:block th:unless="${f.expirationDate != null}">
+                    <span class="badge bg-secondary">日付未設定</span>
+                  </th:block>
+                </td>
+                <td>
+                  <a th:href="@{/edit/{id}(id=${f.id})}" class="btn btn-warning btn-sm me-2">
+                    <i class="bi bi-pencil"></i> 編集
+                  </a>
+                  <form method="post" action="/delete" style="display:inline">
+                    <input type="hidden" name="id" th:value="${f.id}" />
+                    <button type="submit" class="btn btn-danger btn-sm">
+                      <i class="bi bi-trash"></i> 削除
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div th:if="${foods == null || foods.isEmpty()}" class="text-center py-5">
+            <p class="text-muted">登録された食品はありません。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="recipes" role="tabpanel" aria-labelledby="recipes-tab">
+        <div th:if="${savedRecipes == null || savedRecipes.isEmpty()}" class="text-center py-5 text-muted">
+          <i class="bi bi-journal-x" style="font-size: 2rem;"></i>
+          <p class="mt-2">保存されたレシピはありません</p>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3" th:each="recipe : ${savedRecipes}">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold" th:text="${recipe.title}">料理名</h6>
+                <form method="post" action="/recipe/delete" onsubmit="return confirm('削除してもよろしいですか？');">
+                  <input type="hidden" name="id" th:value="${recipe.id}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+              <div class="card-body">
+                <p class="small text-muted mb-2">
+                  <i class="bi bi-clock"></i> <span th:text="${recipe.cookingTime}"></span> / 
+                  <i class="bi bi-bar-chart"></i> <span th:text="${recipe.difficulty}"></span>
+                </p>
+                <button class="btn btn-sm btn-outline-primary w-100 mb-2" type="button" 
+                        data-bs-toggle="collapse" 
+                        th:data-bs-target="'#collapse-' + ${recipe.id}" 
+                        aria-expanded="false">
+                  詳細を見る <i class="bi bi-chevron-down"></i>
                 </button>
-              </form>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <div class="collapse" th:id="'collapse-' + ${recipe.id}">
+                  <div class="card card-body bg-light mt-2">
+                    <strong><i class="bi bi-basket"></i> 材料:</strong>
+                    <p class="small mb-2" th:text="${recipe.ingredients}">データなし</p>
+                    <strong><i class="bi bi-list-ol"></i> 作り方:</strong>
+                    <p class="small mb-0" th:text="${recipe.instructions}" style="white-space: pre-wrap;">データなし</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // URLパラメータによるタブ切り替え
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'recipes') {
+        const triggerEl = document.querySelector('#recipes-tab');
+        const tab = new bootstrap.Tab(triggerEl);
+        tab.show();
+      }
+    });
+  </script>
 </body>
 </html>

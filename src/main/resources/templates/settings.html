@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>通知設定</title>
+  <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">通知設定</span>
+      <a href="/" class="btn btn-outline-light btn-sm">一覧に戻る</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">通知のタイミング設定</h5>
+          </div>
+          <div class="card-body">
+            <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show">
+              設定を保存しました。
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <form method="post" action="/settings">
+              <div class="mb-4">
+                <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> 通知する日</label>
+                <select name="days" class="form-select" required>
+                  <option value="1" th:selected="${user.notificationDaysBefore == 1}">消費期限の1日前</option>
+                  <option value="2" th:selected="${user.notificationDaysBefore == 2}">消費期限の2日前</option>
+                  <option value="3" th:selected="${user.notificationDaysBefore == 3}">消費期限の3日前</option>
+                  <option value="4" th:selected="${user.notificationDaysBefore == 4}">消費期限の4日前</option>
+                  <option value="5" th:selected="${user.notificationDaysBefore == 5}">消費期限の5日前</option>
+                </select>
+                <div class="form-text">消費期限の何日前にメールを送るか設定します。</div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label fw-bold"><i class="bi bi-clock"></i> 通知する時間</label>
+                <select name="time" class="form-select" required>
+                  <th:block th:each="h : ${#numbers.sequence(0, 23)}">
+                    <option th:value="${#numbers.formatInteger(h,2) + ':00'}" 
+                            th:text="${#numbers.formatInteger(h,2) + ':00'}"
+                            th:selected="${user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':00' + ':00') || user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':00')}"></option>
+                    <option th:value="${#numbers.formatInteger(h,2) + ':30'}" 
+                            th:text="${#numbers.formatInteger(h,2) + ':30'}"
+                            th:selected="${user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':30' + ':00') || user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':30')}"></option>
+                  </th:block>
+                </select>
+                <div class="form-text">毎日この時間にチェックしてメールを送ります。</div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary">設定を保存</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
