@@ -44,4 +44,4 @@ PCのプロジェクト用フォルダからターミナルを開き以下のコ
 <a href="https://zenn.dev/ma_ro/articles/49b67565462299" target="_blank">zenn</a>この記事の5までやる  
 自分のPCのプロジェクトフォルダに.envという名前のファイルを作って```GEMINI_API_KEY=ここにAPIKEYを貼る```この一行を書く
 
-https://app.slack.com/client/T08SLRGKKNF/C08SLRH2UDR
+https://pd-a2.onrender.com/
