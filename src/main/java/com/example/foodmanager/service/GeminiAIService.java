@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-
+import lombok.extern.slf4j.Slf4j; // ← これが必要です！
 import java.util.List;
 import java.util.Map;
 
