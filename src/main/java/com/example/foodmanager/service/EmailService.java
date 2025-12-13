@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async; // ★ここが重要：追加してください！
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -34,11 +35,8 @@ public class EmailService {
     public void init() {
         log.info("EmailService initialized with:");
         log.info("Mail username: {}", mailUsername);
+        // パスワードはログに出さない（セキュリティのため桁数のみ）
         log.info("Mail password length: {}", mailPassword != null ? mailPassword.length() : 0);
-        
-        // データベースから送信者メールアドレスを取得
-        String fromEmail = getFromEmailAddress();
-        log.info("From email (from database): {}", fromEmail);
     }
 
     /**
@@ -51,11 +49,12 @@ public class EmailService {
             return firstUser.get().getEmail();
         } else {
             // デフォルトとして設定されたメールアドレスを使用
-            log.warn("データベースにユーザーが存在しません。設定されたメールアドレスを使用します: {}", mailUsername);
             return mailUsername;
         }
     }
 
+    // ▼▼▼ 非同期で実行（@Async） ▼▼▼
+    @Async
     public void sendExpirationNotification(Food food) {
         try {
             String fromEmail = getFromEmailAddress();
@@ -91,6 +90,8 @@ public class EmailService {
         }
     }
 
+    // ▼▼▼ 非同期で実行（@Async） ▼▼▼
+    @Async
     public void sendImmediateExpirationNotification(Food food) {
         try {
             String fromEmail = getFromEmailAddress();
