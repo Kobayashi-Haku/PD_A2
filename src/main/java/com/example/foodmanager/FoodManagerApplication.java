@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableAsync // ▼ 追加: これで裏側での処理が可能になります
+@EnableAsync
 public class FoodManagerApplication {
     public static void main(String[] args) {
         SpringApplication.run(FoodManagerApplication.class, args);
