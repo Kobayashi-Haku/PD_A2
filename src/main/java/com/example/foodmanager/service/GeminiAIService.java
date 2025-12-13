@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class GeminiAIService {
 
     @Value("${gemini.api.key}")
