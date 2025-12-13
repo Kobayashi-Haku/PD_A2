@@ -116,17 +116,19 @@ public class FoodController {
                 .filter(f -> f.getUser().equals(currentUser))
                 .orElseThrow(() -> new RuntimeException("Food not found or access denied"));
 
-        food.setName(name);
-        food.setExpirationDate(LocalDate.parse(expirationDate));
+        // 日付変換
+        LocalDate newDate = LocalDate.parse(expirationDate);
 
+        // 日付が変わっていたら、通知済みフラグをリセット（また通知されるようにする）
         if (!food.getExpirationDate().equals(newDate)) {
             food.setNotificationSent(false);
         }
 
+        // 値をセット
         food.setName(name);
         food.setExpirationDate(newDate);
 
-        // 更新時も、もし期限が近ければ通知を送るかチェック（必要なら）
+        // 更新後も、もし期限が近ければ即時通知を送るかチェック
         checkAndSendImmediateNotification(food, currentUser);
 
         foodRepository.save(food);
