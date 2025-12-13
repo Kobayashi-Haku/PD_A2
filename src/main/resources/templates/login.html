@@ -28,29 +28,42 @@
                 </div>
                 <div class="card-body">
                     <div th:if="${param.error}" class="alert alert-danger">
-                        ユーザー名またはパスワードが正しくありません
+                        メールアドレスまたはパスワードが正しくありません
                     </div>
                     <div th:if="${param.registered}" class="alert alert-success">
                         登録が完了しました。ログインしてください。
                     </div>
-                    <div th:if="${param.logout}" class="alert alert-success">
+                    <div th:if="${param.logout}" class="alert alert-info">
                         ログアウトしました
                     </div>
+                    <div th:if="${param.resetSuccess}" class="alert alert-success">
+                        パスワードを再設定しました。新しいパスワードでログインしてください。
+                    </div>
+
                     <form th:action="@{/login}" method="post">
                         <div class="mb-3">
-                            <label for="username" class="form-label">ユーザー名</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <label for="email" class="form-label">メールアドレス</label>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com">
                         </div>
+                        
                         <div class="mb-3">
                             <label for="password" class="form-label">パスワード</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <div class="d-grid gap-2">
+                        
+                        <div class="d-grid gap-2 mt-4">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-box-arrow-in-right"></i> ログイン
                             </button>
+                            
                             <a href="/register" class="btn btn-outline-secondary">
                                 <i class="bi bi-person-plus"></i> 新規登録
+                            </a>
+
+                            <div class="text-center my-1 text-muted" style="font-size: 0.8rem;">または</div>
+
+                            <a href="/forgot-password" class="btn btn-light border text-secondary">
+                                <i class="bi bi-question-circle"></i> パスワードを忘れた方はこちら
                             </a>
                         </div>
                     </form>

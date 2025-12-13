@@ -16,18 +16,20 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/register", "/css/**", "/js/**", "/webjars/**", "/h2-console/**", "/favicon.ico", "/favicon.svg", "/favicon-16x16.svg").permitAll()
+                .requestMatchers("/register", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/webjars/**", "/h2-console/**", "/favicon.ico", "/favicon.svg", "/favicon-16x16.svg").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
+                // ▼▼▼ 追加: フォームのname属性が "email" であることを指定 ▼▼▼
+                .usernameParameter("email")
                 .permitAll()
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
             )
-            .csrf(csrf -> csrf.disable()); // 開発用にCSRF保護を無効化
+            .csrf(csrf -> csrf.disable());
         
         return http.build();
     }

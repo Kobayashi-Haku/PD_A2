@@ -37,7 +37,6 @@ public class FoodController {
     @Value("${app.notification.enabled:false}")
     private boolean notificationEnabled;
 
-    // コンストラクタ
     public FoodController(FoodRepository foodRepository, UserRepository userRepository, SavedRecipeRepository savedRecipeRepository) {
         this.foodRepository = foodRepository;
         this.userRepository = userRepository;
@@ -46,22 +45,25 @@ public class FoodController {
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByUsername(auth.getName())
+        // メールアドレスで検索する
+        return userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @GetMapping
     public String index(Model model) {
         User currentUser = getCurrentUser();
+        
+        // ▼▼▼ これが不足していたためエラーになっていました！ ▼▼▼
+        model.addAttribute("user", currentUser);
+
         LocalDate now = LocalDate.now();
         LocalDate threeDaysLater = now.plusDays(3);
 
-        // 消費期限が近い順に並び替えて取得
         var foods = foodRepository.findByUserOrderByExpirationDateAsc(currentUser);
         var warning = foodRepository.findByUserAndExpirationDateBetween(currentUser, now, threeDaysLater);
         var expired = foodRepository.findByUserAndExpirationDateBefore(currentUser, now);
 
-        // 保存したレシピを取得
         var savedRecipes = savedRecipeRepository.findByUserOrderBySavedAtDesc(currentUser);
         model.addAttribute("savedRecipes", savedRecipes);
 
@@ -85,16 +87,12 @@ public class FoodController {
         food.setExpirationDate(LocalDate.parse(expirationDate));
         food.setUser(currentUser);
 
-        // 保存
         foodRepository.save(food);
-
-        // ▼▼▼ 修正箇所: currentUser を渡すように変更 ▼▼▼
         checkAndSendImmediateNotification(food, currentUser);
 
         return "redirect:/";
     }
 
-    // 編集画面表示
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Long id, Model model) {
         User currentUser = getCurrentUser();
@@ -106,7 +104,6 @@ public class FoodController {
         return "edit";
     }
 
-    // 更新処理
     @PostMapping("/update")
     public String update(@RequestParam Long id,
                          @RequestParam String name,
@@ -116,26 +113,21 @@ public class FoodController {
                 .filter(f -> f.getUser().equals(currentUser))
                 .orElseThrow(() -> new RuntimeException("Food not found or access denied"));
 
-        // 日付変換
         LocalDate newDate = LocalDate.parse(expirationDate);
-
-        // 日付が変わっていたら、通知済みフラグをリセット（また通知されるようにする）
+        
         if (!food.getExpirationDate().equals(newDate)) {
             food.setNotificationSent(false);
         }
 
-        // 値をセット
         food.setName(name);
         food.setExpirationDate(newDate);
 
-        // 更新後も、もし期限が近ければ即時通知を送るかチェック
         checkAndSendImmediateNotification(food, currentUser);
 
         foodRepository.save(food);
         return "redirect:/";
     }
 
-    // 削除処理
     @PostMapping("/delete")
     public String delete(@RequestParam Long id) {
         User currentUser = getCurrentUser();
@@ -145,26 +137,18 @@ public class FoodController {
         return "redirect:/";
     }
 
-    // ▼▼▼ 即時通知チェック用メソッド ▼▼▼
     private void checkAndSendImmediateNotification(Food food, User user) {
-        // 消費期限が設定されていない場合は何もしない
         if (food.getExpirationDate() == null) {
             return;
         }
 
-        // 「今日」から「消費期限」までの日数を計算
         long daysUntil = ChronoUnit.DAYS.between(LocalDate.now(), food.getExpirationDate());
 
-        // ロジック:
-        // 「残り日数」が「通知設定の日数」以下であれば、すでに危険域なので通知する。
-        // かつ、期限切れ（マイナス）でない場合に送る
         if (daysUntil <= user.getNotificationDaysBefore() && daysUntil >= 0) {
             try {
                 if (emailService != null) {
                     emailService.sendExpirationNotification(food);
-                    System.out.println("即時通知メールを送信しました: " + food.getName());
                 } else if (mockEmailService != null) {
-                    // ローカル開発用（モック）の場合も動くように対応
                     mockEmailService.sendExpirationNotification(food);
                 }
             } catch (Exception e) {

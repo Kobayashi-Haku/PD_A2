@@ -21,7 +21,8 @@ public class SettingsController {
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByUsername(auth.getName())
+        // ▼▼▼ 修正1: findByUsername ではなく findByEmail を使う ▼▼▼
+        return userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -38,5 +39,24 @@ public class SettingsController {
         user.setNotificationTime(LocalTime.parse(time));
         userRepository.save(user);
         return "redirect:/settings?success";
+    }
+
+    @PostMapping("/settings/username")
+    public String updateUsername(@RequestParam String newUsername) {
+        User user = getCurrentUser();
+
+        if (newUsername.equals(user.getUsername())) {
+             return "redirect:/settings?tab=account";
+        }
+        
+        // 重複チェックは削除済み（自由に設定可能）
+        
+        user.setUsername(newUsername);
+        userRepository.save(user);
+        
+        // ▼▼▼ 修正2: セッション更新処理を削除しました ▼▼▼
+        // ログインID（メールアドレス）は変わっていないので、何もしなくて大丈夫です。
+        
+        return "redirect:/settings?tab=account&success=username_updated";
     }
 }

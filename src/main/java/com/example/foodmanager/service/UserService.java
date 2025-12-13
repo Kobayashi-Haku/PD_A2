@@ -18,12 +18,15 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // 1. 入力されたメールアドレスでユーザーを探す
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return org.springframework.security.core.userdetails.User
-            .withUsername(user.getUsername())
+            // 2. ▼▼▼ 修正: ここを getEmail() から getUsername() に変更 ▼▼▼
+            // これにより、画面表示や auth.getName() が「ユーザーネーム」になります
+            .withUsername(user.getEmail()) 
             .password(user.getPassword())
             .roles(user.getRole().replace("ROLE_", ""))
             .build();
@@ -31,9 +34,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User registerUser(String username, String email, String password) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username already exists");
-        }
+
         
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Email already exists");

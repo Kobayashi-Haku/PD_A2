@@ -37,7 +37,7 @@ public class RecipeController {
     // ヘルパーメソッド: ログイン中のユーザーを取得
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByUsername(auth.getName())
+        return userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 

@@ -126,4 +126,25 @@ public class EmailService {
                     food.getUser().getUsername(), food.getName(), e);
         }
     }
+
+    // ▼ 追加: パスワードリセットメール送信
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String resetUrl) {
+        try {
+            String fromEmail = getFromEmailAddress();
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("パスワード再設定のご案内 - 食品管理システム");
+            message.setText("以下のリンクをクリックしてパスワードを再設定してください。\n" +
+                    "（リンクの有効期限は24時間です）\n\n" +
+                    resetUrl + "\n\n" +
+                    "もしこのメールに心当たりがない場合は、無視してください。");
+            
+            mailSender.send(message);
+            log.info("リセットメールを送信しました: {}", toEmail);
+        } catch (Exception e) {
+            log.error("リセットメール送信失敗: {}", toEmail, e);
+        }
+    }
 }

@@ -3,68 +3,170 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>通知設定</title>
+  <title>設定 - 食品消費期限管理</title>
+  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
   <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+  <style>
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .nav-tabs .nav-link {
+      color: #6c757d;
+      font-weight: 500;
+      padding: 1rem 1.5rem;
+    }
+    .nav-tabs .nav-link.active {
+      color: #0d6efd;
+      border-bottom: 3px solid #0d6efd;
+      font-weight: bold;
+    }
+    .nav-tabs .nav-link i { margin-right: 5px; }
+    
+    .info-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 0.2rem;
+    }
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+  </style>
 </head>
 <body class="bg-light">
+  
   <nav class="navbar navbar-dark bg-primary mb-4">
     <div class="container">
-      <span class="navbar-brand mb-0 h1">通知設定</span>
-      <a href="/" class="btn btn-outline-light btn-sm">一覧に戻る</a>
+      <span class="navbar-brand mb-0 h1">設定</span>
+      <a href="/" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+      </a>
     </div>
   </nav>
 
-  <div class="container">
+  <div class="container fade-in">
     <div class="row justify-content-center">
-      <div class="col-md-6">
+      <div class="col-md-8">
+        
         <div class="card shadow-sm">
-          <div class="card-header bg-white">
-            <h5 class="mb-0">通知のタイミング設定</h5>
+          <div class="card-header bg-white p-0">
+            <ul class="nav nav-tabs nav-fill" id="settingsTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="notification-tab" data-bs-toggle="tab" data-bs-target="#notification" type="button" role="tab" aria-selected="true">
+                  <i class="bi bi-bell-fill"></i> 通知設定
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab" aria-selected="false">
+                  <i class="bi bi-person-vcard-fill"></i> アカウント情報
+                </button>
+              </li>
+            </ul>
           </div>
-          <div class="card-body">
+
+          <div class="card-body p-4">
             <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show">
-              設定を保存しました。
+              <i class="bi bi-check-circle"></i> 設定を保存しました。
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${param.success == 'username_updated'}" class="alert alert-success alert-dismissible fade show">
+              <i class="bi bi-person-check"></i> ユーザー名を変更しました。
               <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
 
-            <form method="post" action="/settings">
-              <div class="mb-4">
-                <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> 通知する日</label>
-                <select name="days" class="form-select" required>
-                  <option value="1" th:selected="${user.notificationDaysBefore == 1}">消費期限の1日前</option>
-                  <option value="2" th:selected="${user.notificationDaysBefore == 2}">消費期限の2日前</option>
-                  <option value="3" th:selected="${user.notificationDaysBefore == 3}">消費期限の3日前</option>
-                  <option value="4" th:selected="${user.notificationDaysBefore == 4}">消費期限の4日前</option>
-                  <option value="5" th:selected="${user.notificationDaysBefore == 5}">消費期限の5日前</option>
-                </select>
-                <div class="form-text">消費期限の何日前にメールを送るか設定します。</div>
+            <div class="tab-content" id="settingsTabContent">
+              
+              <div class="tab-pane fade show active" id="notification" role="tabpanel" aria-labelledby="notification-tab">
+                <form method="post" action="/settings">
+                  <div class="mb-4">
+                    <label class="form-label fw-bold text-primary"><i class="bi bi-calendar-event"></i> 通知タイミング</label>
+                    <select name="days" class="form-select form-select-lg" required>
+                      <option value="1" th:selected="${user.notificationDaysBefore == 1}">消費期限の1日前</option>
+                      <option value="2" th:selected="${user.notificationDaysBefore == 2}">消費期限の2日前</option>
+                      <option value="3" th:selected="${user.notificationDaysBefore == 3}">消費期限の3日前</option>
+                      <option value="4" th:selected="${user.notificationDaysBefore == 4}">消費期限の4日前</option>
+                      <option value="5" th:selected="${user.notificationDaysBefore == 5}">消費期限の5日前</option>
+                    </select>
+                    <div class="form-text mt-2">消費期限の何日前にメールを送るか設定します。</div>
+                  </div>
+
+                  <div class="mb-4">
+                    <label class="form-label fw-bold text-primary"><i class="bi bi-clock"></i> 通知時間</label>
+                    <select name="time" class="form-select form-select-lg" required>
+                      <th:block th:each="h : ${#numbers.sequence(0, 23)}">
+                        <option th:value="${#numbers.formatInteger(h,2) + ':00'}" 
+                                th:text="${#numbers.formatInteger(h,2) + ':00'}"
+                                th:selected="${user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':00' + ':00') || user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':00')}"></option>
+                        <option th:value="${#numbers.formatInteger(h,2) + ':30'}" 
+                                th:text="${#numbers.formatInteger(h,2) + ':30'}"
+                                th:selected="${user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':30' + ':00') || user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':30')}"></option>
+                      </th:block>
+                    </select>
+                    <div class="form-text mt-2">毎日この時間にチェックしてメールを送ります。</div>
+                  </div>
+
+                  <div class="d-grid mt-5">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                      <i class="bi bi-save"></i> 設定を保存する
+                    </button>
+                  </div>
+                </form>
               </div>
 
-              <div class="mb-4">
-                <label class="form-label fw-bold"><i class="bi bi-clock"></i> 通知する時間</label>
-                <select name="time" class="form-select" required>
-                  <th:block th:each="h : ${#numbers.sequence(0, 23)}">
-                    <option th:value="${#numbers.formatInteger(h,2) + ':00'}" 
-                            th:text="${#numbers.formatInteger(h,2) + ':00'}"
-                            th:selected="${user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':00' + ':00') || user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':00')}"></option>
-                    <option th:value="${#numbers.formatInteger(h,2) + ':30'}" 
-                            th:text="${#numbers.formatInteger(h,2) + ':30'}"
-                            th:selected="${user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':30' + ':00') || user.notificationTime.toString() == (#numbers.formatInteger(h,2) + ':30')}"></option>
-                  </th:block>
-                </select>
-                <div class="form-text">毎日この時間にチェックしてメールを送ります。</div>
+              <div class="tab-pane fade" id="account" role="tabpanel" aria-labelledby="account-tab">
+                <div class="text-center mb-4">
+                  <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person text-secondary" style="font-size: 3rem;"></i>
+                  </div>
+                </div>
+
+                <div class="info-label">ユーザー名</div>
+                <form action="/settings/username" method="post" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="newUsername" class="form-control" th:value="${user.username}" required minlength="3" maxlength="20">
+                        <button class="btn btn-outline-primary" type="submit">変更</button>
+                    </div>
+                    <div th:if="${param.error == 'username_taken'}" class="text-danger small mt-1">
+                        <i class="bi bi-exclamation-circle"></i> そのユーザー名は既に使用されています
+                    </div>
+                </form>
+
+                <div class="info-label">メールアドレス</div>
+                <div class="info-value">
+                  <i class="bi bi-envelope text-muted me-2"></i>
+                  <span th:text="${user.email}">user@example.com</span>
+                </div>
+
+                <div class="info-label">登録済み食品数</div>
+                <div class="info-value">
+                  <i class="bi bi-basket text-muted me-2"></i>
+                  <span th:text="${user.foods != null ? user.foods.size() : 0} + ' 個'">0 個</span>
+                </div>
               </div>
 
-              <div class="d-grid">
-                <button type="submit" class="btn btn-primary">設定を保存</button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
+        
       </div>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // URLパラメータ ?tab=account があればアカウントタブを開く
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'account') {
+        const triggerEl = document.querySelector('#account-tab');
+        const tab = new bootstrap.Tab(triggerEl);
+        tab.show();
+      }
+    });
+  </script>
 </body>
 </html>
