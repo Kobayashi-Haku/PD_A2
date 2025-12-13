@@ -119,6 +119,13 @@ public class FoodController {
         food.setName(name);
         food.setExpirationDate(LocalDate.parse(expirationDate));
 
+        if (!food.getExpirationDate().equals(newDate)) {
+            food.setNotificationSent(false);
+        }
+
+        food.setName(name);
+        food.setExpirationDate(newDate);
+
         // 更新時も、もし期限が近ければ通知を送るかチェック（必要なら）
         checkAndSendImmediateNotification(food, currentUser);
 
