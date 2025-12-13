@@ -1,20 +1,17 @@
 package com.example.foodmanager.service;
 
 import com.example.foodmanager.model.Food;
-import com.example.foodmanager.model.User;
-import com.example.foodmanager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Async; // ★ここが重要：追加してください！
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import jakarta.annotation.PostConstruct;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -22,129 +19,77 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "app.notification.enabled", havingValue = "true", matchIfMissing = true)
 public class EmailService {
 
-    private final JavaMailSender mailSender;
-    private final UserRepository userRepository;
+    // HTTPリクエストを送るためのクライアント
+    private final WebClient.Builder webClientBuilder;
 
-    @Value("${spring.mail.username}")
-    private String mailUsername;
-    
-    @Value("${spring.mail.password}")
-    private String mailPassword;
+    @Value("${brevo.api.key:}")
+    private String brevoApiKey;
 
-    @PostConstruct
-    public void init() {
-        log.info("EmailService initialized with:");
-        log.info("Mail username: {}", mailUsername);
-        // パスワードはログに出さない（セキュリティのため桁数のみ）
-        log.info("Mail password length: {}", mailPassword != null ? mailPassword.length() : 0);
-    }
+    @Value("${mail.sender:}")
+    private String senderEmail;
 
     /**
-     * 送信者メールアドレスをデータベースから取得
-     * 最初に登録されたユーザーのメールアドレスを使用
+     * Brevo APIを使ってメールを送信する共通メソッド
      */
-    private String getFromEmailAddress() {
-        Optional<User> firstUser = userRepository.findAll().stream().findFirst();
-        if (firstUser.isPresent()) {
-            return firstUser.get().getEmail();
-        } else {
-            // デフォルトとして設定されたメールアドレスを使用
-            return mailUsername;
+    private void sendEmailViaApi(String toEmail, String subject, String content) {
+        if (brevoApiKey == null || brevoApiKey.isEmpty()) {
+            log.warn("Brevo APIキーが設定されていません。メール送信をスキップします。");
+            return;
+        }
+
+        try {
+            // Brevo APIに送るデータ（JSON形式）を作成
+            Map<String, Object> body = Map.of(
+                "sender", Map.of("name", "食品管理アプリ", "email", senderEmail),
+                "to", List.of(Map.of("email", toEmail)),
+                "subject", subject,
+                "textContent", content
+            );
+
+            // APIへのPOST送信
+            String response = webClientBuilder.build().post()
+                .uri("https://api.brevo.com/v3/smtp/email")
+                .header("api-key", brevoApiKey)
+                .header("Content-Type", "application/json")
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block(); 
+
+            log.info("Brevo APIでメール送信成功: {}", toEmail);
+
+        } catch (Exception e) {
+            log.error("Brevo API送信失敗: {}", e.getMessage());
         }
     }
 
-    // ▼▼▼ 非同期で実行（@Async） ▼▼▼
     @Async
     public void sendExpirationNotification(Food food) {
-        try {
-            String fromEmail = getFromEmailAddress();
-            
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(food.getUser().getEmail());
-            message.setSubject("食品の賞味期限通知 - " + food.getName());
-            
-            String messageText = String.format(
-                "こんにちは、%sさん\n\n" +
-                "登録された食品の賞味期限が近づいています。\n\n" +
-                "食品名: %s\n" +
-                "賞味期限: %s\n" +
-                "登録日時: %s\n\n" +
-                "お早めにお召し上がりください。\n\n" +
-                "食品管理システム",
-                food.getUser().getUsername(),
-                food.getName(),
-                food.getExpirationDate().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")),
-                food.getRegisteredAt().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm"))
-            );
-            
-            message.setText(messageText);
-            
-            mailSender.send(message);
-            log.info("通知メールを送信しました - ユーザー: {}, 食品: {}", 
-                    food.getUser().getUsername(), food.getName());
-            
-        } catch (Exception e) {
-            log.error("メール送信に失敗しました - ユーザー: {}, 食品: {}", 
-                    food.getUser().getUsername(), food.getName(), e);
-        }
-    }
+        String subject = "消費期限のお知らせ - " + food.getName();
+        String messageText = String.format(
+            "こんにちは%sさん\n\n" +
+            "以下の食品の消費期限が近づいています。\n\n" +
+            "■ 食品名: %s\n" +
+            "■ 消費期限: %s\n\n" +
+            "使い道に迷ったらホーム画面から「レシピ提案」を試してみてください！\n\n" +
+            "食品管理システム",
+            food.getUser().getUsername(),
+            food.getName(),
+            food.getExpirationDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+        );
 
-    // ▼▼▼ 非同期で実行（@Async） ▼▼▼
-    @Async
-    public void sendImmediateExpirationNotification(Food food) {
-        try {
-            String fromEmail = getFromEmailAddress();
-            
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(food.getUser().getEmail());
-            message.setSubject("【緊急】明日が賞味期限！ - " + food.getName());
-            
-            String messageText = String.format(
-                "こんにちは、%sさん\n\n" +
-                "登録された食品の賞味期限が明日です！\n\n" +
-                "食品名: %s\n" +
-                "賞味期限: %s（明日）\n" +
-                "登録日時: %s\n\n" +
-                "緊急！明日が賞味期限です。お早めにお召し上がりください。\n\n" +
-                "食品管理システム",
-                food.getUser().getUsername(),
-                food.getName(),
-                food.getExpirationDate().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")),
-                food.getRegisteredAt().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm"))
-            );
-            
-            message.setText(messageText);
-            
-            mailSender.send(message);
-            log.info("緊急通知メールを送信しました - ユーザー: {}, 食品: {}", 
-                    food.getUser().getUsername(), food.getName());
-            
-        } catch (Exception e) {
-            log.error("緊急メール送信に失敗しました - ユーザー: {}, 食品: {}", 
-                    food.getUser().getUsername(), food.getName(), e);
-        }
+        sendEmailViaApi(food.getUser().getEmail(), subject, messageText);
     }
-
-    // ▼ 追加: パスワードリセットメール送信
+    
+    // パスワードリセット用
     @Async
     public void sendPasswordResetEmail(String toEmail, String resetUrl) {
-        try {
-            String fromEmail = getFromEmailAddress();
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("パスワード再設定のご案内 - 食品管理システム");
-            message.setText("以下のリンクをクリックしてパスワードを再設定してください。\n" +
+        String subject = "パスワード再設定のご案内";
+        String messageText = "以下のリンクをクリックしてパスワードを再設定してください。\n" +
                     "（リンクの有効期限は24時間です）\n\n" +
                     resetUrl + "\n\n" +
-                    "もしこのメールに心当たりがない場合は、無視してください。");
-            
-            mailSender.send(message);
-            log.info("リセットメールを送信しました: {}", toEmail);
-        } catch (Exception e) {
-            log.error("リセットメール送信失敗: {}", toEmail, e);
-        }
+                    "もしこのメールに心当たりがない場合は、無視してください。";
+        
+        sendEmailViaApi(toEmail, subject, messageText);
     }
 }
