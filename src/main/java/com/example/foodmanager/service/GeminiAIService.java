@@ -3,7 +3,7 @@ package com.example.foodmanager.service;
 import com.example.foodmanager.model.Recipe;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j; // 追加: ログ用
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@Slf4j // 追加: これで log.info が使えるようになります
+@Slf4j
 public class GeminiAIService {
 
     @Value("${gemini.api.key}")
@@ -29,7 +29,7 @@ public class GeminiAIService {
     private final ObjectMapper objectMapper;
 
     public GeminiAIService() {
-        // プロキシ設定
+        // プロキシ設定（大学環境などに対応）
         HttpClient httpClient;
         String httpProxy = System.getProperty("http.proxyHost");
         String httpProxyPort = System.getProperty("http.proxyPort");
@@ -59,26 +59,28 @@ public class GeminiAIService {
     public Recipe generateRecipeFromIngredients(List<String> ingredients) {
         log.info("=== Gemini API 呼び出し開始 ===");
         
+        // ▼▼▼ 修正: ダミーレシピではなく例外を投げる ▼▼▼
         if (apiKey == null || apiKey.isEmpty()) {
-            log.warn("APIキーが未設定のため、ダミーレシピを返します");
-            return createDummyRecipe(ingredients);
+            log.error("APIキーが設定されていません");
+            throw new RuntimeException("AIサービスの準備ができていません（APIキー未設定）");
         }
 
         try {
             String prompt = createPrompt(ingredients);
-            Thread.sleep(1000); // レート制限対策
+            // Thread.sleep(1000); // 必要に応じてコメントアウト解除（レート制限対策）
 
             String response = callGeminiAPI(prompt);
-            return parseRecipeFromResponse(response, ingredients);
+            return parseRecipeFromResponse(response);
+            
         } catch (Exception e) {
             log.error("Gemini API呼び出しエラー", e);
-            return createDummyRecipe(ingredients);
+            // ▼▼▼ 修正: ここでも例外を投げる ▼▼▼
+            throw new RuntimeException("レシピの生成に失敗しました: " + e.getMessage());
         }
     }
 
     private String createPrompt(List<String> ingredients) {
         String ingredientList = String.join("、", ingredients);
-        // テキストブロック（Java 15+）
         return """
             以下の食材を使った美味しいレシピを1つ提案してください。
             食材: %s
@@ -115,9 +117,11 @@ public class GeminiAIService {
         return responseMono.block();
     }
 
-    private Recipe parseRecipeFromResponse(String response, List<String> ingredients) {
+    private Recipe parseRecipeFromResponse(String response) {
         try {
-            if (response == null || response.trim().isEmpty()) return createDummyRecipe(ingredients);
+            if (response == null || response.trim().isEmpty()) {
+                throw new RuntimeException("AIからの応答が空でした");
+            }
 
             JsonNode rootNode = objectMapper.readTree(response);
             JsonNode candidatesNode = rootNode.get("candidates");
@@ -131,10 +135,12 @@ public class GeminiAIService {
                     return parseRecipeText(text);
                 }
             }
+            throw new RuntimeException("AIからの応答の解析に失敗しました（形式エラー）");
+
         } catch (Exception e) {
             log.error("レスポンス解析エラー", e);
+            throw new RuntimeException("レシピデータの読み取りに失敗しました");
         }
-        return createDummyRecipe(ingredients);
     }
 
     private Recipe parseRecipeText(String text) {
@@ -142,11 +148,14 @@ public class GeminiAIService {
         String title = "提案レシピ";
         String ingredients = "";
         String instructions = "";
-        String cookingTime = "30分";
+        String cookingTime = "不明";
         String difficulty = "普通";
 
         for (String line : lines) {
             line = line.trim();
+            // マークダウンの太字除去などのクリーニングを行っても良い
+            line = line.replace("**", ""); 
+
             if (line.startsWith("料理名:") || line.startsWith("タイトル:")) {
                 title = line.substring(line.indexOf(":") + 1).trim();
             } else if (line.startsWith("材料:") || line.startsWith("食材:")) {
@@ -157,22 +166,16 @@ public class GeminiAIService {
                 cookingTime = line.substring(line.indexOf(":") + 1).trim();
             } else if (line.startsWith("難易度:")) {
                 difficulty = line.substring(line.indexOf(":") + 1).trim();
-            } else if (line.matches("^\\d+\\..*")) {
+            } else if (line.matches("^\\d+\\..*") || line.startsWith("- ")) {
                 if (!instructions.isEmpty()) instructions += "\n";
                 instructions += line;
+            } else if (!line.isEmpty() && !line.contains(":")) {
+                // 行頭にラベルがない場合、前の項目の続きとみなす簡易ロジック
+                if (!ingredients.isEmpty() && instructions.isEmpty()) {
+                     ingredients += "\n" + line;
+                }
             }
         }
         return new Recipe(title, ingredients, instructions, cookingTime, difficulty);
-    }
-
-    private Recipe createDummyRecipe(List<String> ingredients) {
-        String ingredientList = String.join("、", ingredients);
-        return new Recipe(
-            ingredients.get(0) + "を使った簡単料理",
-            ingredientList + "など",
-            "1. " + ingredients.get(0) + "を適当な大きさに切る\n2. 炒める\n3. 完成",
-            "15分",
-            "簡単"
-        );
     }
 }

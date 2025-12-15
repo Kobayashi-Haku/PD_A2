@@ -55,7 +55,8 @@
               <div class="mb-3">
                 <label for="expirationDate" class="form-label">消費期限</label>
                 <input type="date" class="form-control" id="expirationDate" 
-                       name="expirationDate" required>
+                       name="expirationDate" required
+                       th:min="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}">
               </div>
               <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary">

@@ -82,9 +82,16 @@ public class FoodController {
     @PostMapping("/add")
     public String addSubmit(@RequestParam String name, @RequestParam String expirationDate) {
         User currentUser = getCurrentUser();
+        LocalDate expDate = LocalDate.parse(expirationDate);
+
+        // ▼▼▼ 追加: 過去の日付チェック（今日より前ならエラー） ▼▼▼
+        if (expDate.isBefore(LocalDate.now())) {
+            return "redirect:/add?error=past_date";
+        }
+
         Food food = new Food();
         food.setName(name);
-        food.setExpirationDate(LocalDate.parse(expirationDate));
+        food.setExpirationDate(expDate);
         food.setUser(currentUser);
 
         foodRepository.save(food);

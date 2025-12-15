@@ -111,26 +111,158 @@
         </div>
     </div>
 
+    <div class="modal fade" id="limitModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> お気に入りレシピの上限</h5>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">お気に入りレシピの登録は10個までです。<br>お気に入りレシピの中からどれか削除しますか？</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btnLimitNo">いいえ（ホームへ）</button>
+            <button type="button" class="btn btn-primary" id="btnLimitYes">はい（削除する）</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="deleteSelectModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">どれを削除しますか？</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small">削除ボタンを押すとすぐに削除されます。</p>
+            <div class="list-group">
+              <div th:each="recipe : ${savedRecipes}" class="list-group-item d-flex justify-content-between align-items-center" th:id="'recipe-row-' + ${recipe.id}">
+                 <div>
+                     <span class="fw-bold" th:text="${recipe.title}">料理名</span>
+                     <br>
+                     <small class="text-muted" th:text="${#temporals.format(recipe.savedAt, 'yyyy/MM/dd HH:mm')}">日付</small>
+                 </div>
+                 <button class="btn btn-outline-danger btn-sm delete-recipe-btn" th:data-id="${recipe.id}">
+                    <i class="bi bi-trash"></i> 削除
+                 </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
-    <script>
+    <script th:inline="javascript">
+        // 現在の保存数をサーバーから取得（Thymeleafのインライン展開）
+        /*<![CDATA[*/
+        const initialSavedCount = /*[[${savedRecipes != null ? savedRecipes.size() : 0}]]*/ 0;
+        /*]]>*/
+        
+        let currentCount = initialSavedCount;
+
+        // 保存ボタンの制御
+        const saveForm = document.getElementById('saveRecipeForm');
+        if (saveForm) {
+            saveForm.addEventListener('submit', function(e) {
+                if (currentCount >= 10) {
+                    e.preventDefault(); // 送信をブロック
+                    const limitModal = new bootstrap.Modal(document.getElementById('limitModal'));
+                    limitModal.show();
+                }
+            });
+        }
+
+        // モーダル1: 「いいえ」 -> ホームへ
+        const btnNo = document.getElementById('btnLimitNo');
+        if(btnNo) {
+            btnNo.addEventListener('click', function() {
+                window.location.href = '/';
+            });
+        }
+
+        // モーダル1: 「はい」 -> 削除選択モーダルを開く
+        const btnYes = document.getElementById('btnLimitYes');
+        if(btnYes) {
+            btnYes.addEventListener('click', function() {
+                // 現在のモーダルを閉じる
+                const limitModalEl = document.getElementById('limitModal');
+                const limitModal = bootstrap.Modal.getInstance(limitModalEl);
+                limitModal.hide();
+
+                // 削除モーダルを開く
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteSelectModal'));
+                deleteModal.show();
+            });
+        }
+
+        // 削除ボタンの処理（AJAX）
+        document.querySelectorAll('.delete-recipe-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                if(!confirm('本当に削除しますか？')) return;
+
+                const id = this.getAttribute('data-id');
+                const formData = new FormData();
+                formData.append('id', id);
+
+                // AJAXで削除リクエスト
+                fetch('/recipe/delete/ajax', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if(response.ok) {
+                        // 画面から行を消す
+                        const row = document.getElementById('recipe-row-' + id);
+                        if(row) row.remove();
+                        
+                        // カウントを減らす
+                        currentCount--;
+                        
+                        // 削除モーダルを閉じる
+                        const deleteModalEl = document.getElementById('deleteSelectModal');
+                        const deleteModal = bootstrap.Modal.getInstance(deleteModalEl);
+                        deleteModal.hide();
+
+                        // ユーザーに通知
+                        alert('レシピを削除しました。\nこれで新しいレシピを保存できます！');
+                    } else {
+                        alert('削除に失敗しました。');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('エラーが発生しました。');
+                });
+            });
+        });
+
+        // --- 生成ロジック ---
         function generateRecipe() {
-            // チェックボックスの確認
             const checkboxes = document.querySelectorAll('input[name="selectedFoodIds"]:checked');
             if (checkboxes.length === 0) {
                 alert("食材を少なくとも1つ選んでください");
                 return;
             }
 
-            // UI切り替え
-            document.getElementById('selectionCard').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultCard').style.display = 'none';
-            document.getElementById('errorAlert').style.display = 'none';
+            // IDが存在するか確認してから操作
+            const selectionCard = document.getElementById('selectionCard');
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('resultCard');
+            const errorAlert = document.getElementById('errorAlert');
 
-            // データ準備
+            if(selectionCard) selectionCard.style.display = 'none';
+            if(loading) loading.style.display = 'block';
+            if(resultCard) resultCard.style.display = 'none';
+            if(errorAlert) errorAlert.style.display = 'none';
+
             const formData = new FormData(document.getElementById('recipeForm'));
 
-            // 送信
             fetch('/recipe/generate', {
                 method: 'POST',
                 body: formData
@@ -140,38 +272,35 @@
                 return response.json();
             })
             .then(recipe => {
-                // 1. 画面に表示する
                 document.getElementById('recipeTitle').textContent = recipe.title;
                 document.getElementById('cookingTime').textContent = recipe.cookingTime;
                 document.getElementById('difficulty').textContent = recipe.difficulty;
                 document.getElementById('ingredients').textContent = recipe.ingredients;
                 document.getElementById('instructions').textContent = recipe.instructions;
 
-                // 2. ★重要★ 保存用フォームの隠し項目にデータをコピーする
-                // これがないと、保存ボタンを押しても「空っぽ」で保存されてしまいます
                 document.getElementById('hiddenTitle').value = recipe.title;
                 document.getElementById('hiddenIngredients').value = recipe.ingredients;
                 document.getElementById('hiddenInstructions').value = recipe.instructions;
                 document.getElementById('hiddenCookingTime').value = recipe.cookingTime;
                 document.getElementById('hiddenDifficulty').value = recipe.difficulty;
 
-                // 完了後の表示切り替え
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('resultCard').style.display = 'block';
+                if(loading) loading.style.display = 'none';
+                if(resultCard) resultCard.style.display = 'block';
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('selectionCard').style.display = 'block';
-                document.getElementById('errorAlert').style.display = 'block';
-                document.getElementById('errorMessage').textContent = 'エラーが発生しました。もう一度お試しください。';
+                if(loading) loading.style.display = 'none';
+                if(selectionCard) selectionCard.style.display = 'block';
+                if(errorAlert) errorAlert.style.display = 'block';
+                
+                document.getElementById('errorMessage').textContent = 
+                    'AIとの通信に失敗しました。一時的な不具合の可能性がありますので、もう一度お試しいただくか、しばらく時間を置いてから再度お試しください。';
             });
         }
 
         function resetForm() {
             document.getElementById('resultCard').style.display = 'none';
             document.getElementById('selectionCard').style.display = 'block';
-            // フォームのリセットは任意（チェックボックスを残したければ何もしない）
         }
     </script>
 </body>
