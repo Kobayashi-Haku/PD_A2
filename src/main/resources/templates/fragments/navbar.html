@@ -1,0 +1,80 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* 共通ナビゲーションバー。各ページから th:replace="~{fragments/navbar :: navbar(...)}" で読み込みます。
+     パラメータ:
+       title     - 表示するタイトル文字列
+       navClass  - navbarの背景色クラス（例: bg-primary, bg-success）
+       showBack  - trueなら「一覧に戻る」リンクを表示
+       showUser  - trueならユーザーメニュー（設定・ログアウト）を表示
+*/-->
+<nav th:fragment="navbar(title, navClass, showBack, showUser, currentUser)"
+     class="navbar navbar-dark mb-4" th:classappend="${navClass != null ? navClass : 'bg-primary'}">
+  <div class="container">
+    <span class="navbar-brand mb-0 h1" th:text="${title}">食品消費期限管理</span>
+
+    <div class="d-flex align-items-center">
+      <button type="button" id="darkModeToggle" class="btn btn-sm btn-outline-light me-2" title="ダークモード切替">
+        <i class="bi bi-moon-stars-fill" id="darkModeIcon"></i>
+      </button>
+
+      <a th:if="${showBack}" href="/" class="btn btn-outline-light btn-sm me-2">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+      </a>
+
+      <th:block th:if="${showUser}">
+        <a href="/settings" class="settings-icon" title="設定" style="font-size:1.3rem;margin-right:15px;color:rgba(255,255,255,0.8);">
+          <i class="bi bi-gear-fill"></i>
+        </a>
+
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle" style="font-size: 1.3rem;"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+            <li th:if="${currentUser != null}"><h6 class="dropdown-header"><span th:text="${currentUser.username}">ユーザー</span> 様</h6></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" th:action="@{/logout}" style="margin: 0;">
+                <button type="submit" class="dropdown-item text-danger">
+                  <i class="bi bi-box-arrow-right"></i> ログアウト
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </th:block>
+    </div>
+  </div>
+</nav>
+
+<script th:fragment="darkmode-script">
+(function() {
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    var icon = document.getElementById('darkModeIcon');
+    if (icon) {
+      icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+    }
+  }
+
+  var saved = localStorage.getItem('theme') || 'light';
+  applyTheme(saved);
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('darkModeToggle');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        var current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

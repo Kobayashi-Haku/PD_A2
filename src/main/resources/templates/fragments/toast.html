@@ -1,0 +1,53 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* トースト通知コンテナ。各ページから th:replace="~{fragments/toast :: toast}" で読み込み、
+     JS側で showToast(message, type) を呼ぶか、?toast=added 等のクエリパラメータで自動表示します。 */-->
+<div th:fragment="toast" aria-live="polite" aria-atomic="true" style="position: relative; z-index: 1080;">
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="appToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="appToastBody">処理が完了しました。</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:fragment="toast-script">
+function showToast(message, type) {
+  var toastEl = document.getElementById('appToast');
+  if (!toastEl) return;
+  var bodyEl = document.getElementById('appToastBody');
+  bodyEl.textContent = message;
+  toastEl.classList.remove('bg-success', 'bg-danger', 'bg-info');
+  toastEl.classList.add(type === 'error' ? 'bg-danger' : (type === 'info' ? 'bg-info' : 'bg-success'));
+  var toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3500 });
+  toast.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var params = new URLSearchParams(window.location.search);
+  var toastParam = params.get('toast');
+  if (toastParam) {
+    var messages = {
+      added: '食品を追加しました。',
+      updated: '食品を更新しました。',
+      deleted: '削除しました。',
+      saved: '保存しました。',
+      'username_updated': 'ユーザー名を変更しました。'
+    };
+    showToast(messages[toastParam] || '完了しました。', 'success');
+  }
+  var successParam = params.get('success');
+  if (successParam === '' || successParam === 'true') {
+    showToast('設定を保存しました。', 'success');
+  } else if (successParam === 'username_updated') {
+    showToast('ユーザー名を変更しました。', 'success');
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,6 +1,9 @@
 package com.example.foodmanager.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +17,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "ユーザー名を入力してください")
+    @Size(min = 3, max = 20, message = "ユーザー名は3〜20文字で入力してください")
     @Column(nullable = false)
     private String username;
 
+    @NotBlank(message = "メールアドレスを入力してください")
+    @Email(message = "メールアドレスの形式が正しくありません")
     @Column(nullable = false, unique = true)
     private String email;
 

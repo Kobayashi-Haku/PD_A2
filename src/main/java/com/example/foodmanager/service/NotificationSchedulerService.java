@@ -1,8 +1,10 @@
 package com.example.foodmanager.service;
 
 import com.example.foodmanager.model.Food;
+import com.example.foodmanager.model.NotificationLog;
 import com.example.foodmanager.model.User;
 import com.example.foodmanager.repository.FoodRepository;
+import com.example.foodmanager.repository.NotificationLogRepository;
 import com.example.foodmanager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class NotificationSchedulerService {
 
     private final FoodRepository foodRepository;
     private final UserRepository userRepository; // 追加
+    private final NotificationLogRepository notificationLogRepository;
 
     @Autowired(required = false)
     private EmailService emailService;
@@ -45,7 +48,7 @@ public class NotificationSchedulerService {
 
         // 1. 今この時間に通知を希望しているユーザーを探す
         List<User> targetUsers = userRepository.findByNotificationTime(now);
-        
+
         if (targetUsers.isEmpty()) {
             return; // 対象ユーザーがいなければ終了
         }
@@ -80,8 +83,17 @@ public class NotificationSchedulerService {
             } else if (mockEmailService != null) {
                 mockEmailService.sendExpirationNotification(food);
             }
+            recordNotificationLog(food);
         } catch (Exception e) {
             log.error("メール送信失敗: {}", food.getName(), e);
+        }
+    }
+
+    private void recordNotificationLog(Food food) {
+        try {
+            notificationLogRepository.save(new NotificationLog(food.getUser(), food.getName()));
+        } catch (Exception e) {
+            log.error("通知履歴の保存に失敗しました: {}", food.getName(), e);
         }
     }
 }

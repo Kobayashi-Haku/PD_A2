@@ -5,6 +5,7 @@ import com.example.foodmanager.model.User;
 import com.example.foodmanager.repository.PasswordResetTokenRepository;
 import com.example.foodmanager.repository.UserRepository;
 import com.example.foodmanager.service.EmailService;
+import com.example.foodmanager.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +15,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.UUID;
 
 @Controller
@@ -36,11 +41,12 @@ public class PasswordResetController {
     @PostMapping("/forgot-password")
     public String processForgotPassword(@RequestParam String email, HttpServletRequest request, Model model) {
         User user = userRepository.findByEmail(email).orElse(null);
-        
+
         if (user != null) {
-            // トークン生成
-            String token = UUID.randomUUID().toString();
-            PasswordResetToken myToken = new PasswordResetToken(token, user);
+            // トークン生成（生の値はメールでのみ送信し、DBにはハッシュ値だけ保存する）
+            String rawToken = UUID.randomUUID().toString();
+            String tokenHash = hashToken(rawToken);
+            PasswordResetToken myToken = new PasswordResetToken(tokenHash, user);
             tokenRepository.save(myToken);
 
             // リセット用URLの作成（現在のドメインを自動取得）
@@ -48,12 +54,12 @@ public class PasswordResetController {
                     .replacePath(null)
                     .build()
                     .toUriString();
-            String resetUrl = baseUrl + "/reset-password?token=" + token;
+            String resetUrl = baseUrl + "/reset-password?token=" + rawToken;
 
             // メール送信
             emailService.sendPasswordResetEmail(user.getEmail(), resetUrl);
         }
-        
+
         // セキュリティのため、登録があってもなくても「送信しました」と表示
         return "redirect:/forgot-password?sent";
     }
@@ -61,7 +67,7 @@ public class PasswordResetController {
     // 3. パスワード再設定画面を表示
     @GetMapping("/reset-password")
     public String showResetPasswordForm(@RequestParam String token, Model model) {
-        PasswordResetToken resetToken = tokenRepository.findByToken(token).orElse(null);
+        PasswordResetToken resetToken = tokenRepository.findByTokenHash(hashToken(token)).orElse(null);
 
         if (resetToken == null || resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             model.addAttribute("error", "リンクが無効か、期限切れです。");
@@ -76,10 +82,17 @@ public class PasswordResetController {
     @PostMapping("/reset-password")
     @Transactional
     public String processResetPassword(@RequestParam String token, @RequestParam String password, Model model) {
-        PasswordResetToken resetToken = tokenRepository.findByToken(token).orElse(null);
+        String tokenHash = hashToken(token);
+        PasswordResetToken resetToken = tokenRepository.findByTokenHash(tokenHash).orElse(null);
 
         if (resetToken == null || resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             return "redirect:/login?error";
+        }
+
+        if (!UserService.isPasswordStrongEnough(password)) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", UserService.PASSWORD_REQUIREMENT_MESSAGE);
+            return "reset-password";
         }
 
         // パスワード更新
@@ -88,8 +101,18 @@ public class PasswordResetController {
         userRepository.save(user);
 
         // 使用済みトークンを削除
-        tokenRepository.deleteByToken(token);
+        tokenRepository.deleteByTokenHash(tokenHash);
 
         return "redirect:/login?resetSuccess";
+    }
+
+    private String hashToken(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hashBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 }
