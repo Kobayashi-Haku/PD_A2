@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>AIレシピ提案</title>
+    <script>(function(){var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.setAttribute('data-bs-theme','dark');}})();</script>
     <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
@@ -15,12 +18,7 @@
     </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-success mb-4">
-        <div class="container">
-            <span class="navbar-brand mb-0 h1"><i class="bi bi-robot"></i> AIレシピ提案</span>
-            <a href="/" class="btn btn-outline-light btn-sm">一覧に戻る</a>
-        </div>
-    </nav>
+    <nav th:replace="~{fragments/navbar :: navbar('AIレシピ提案', 'bg-success', true, false, null)}"></nav>
 
     <div class="container fade-in">
         <div class="row justify-content-center">
@@ -84,7 +82,7 @@
                         <p id="instructions" style="white-space: pre-wrap;"></p>
 
                         <div class="d-grid gap-2 mt-4 pt-3 border-top">
-                            <form method="post" action="/recipe/save" id="saveRecipeForm">
+                            <form method="post" th:action="@{/recipe/save}" id="saveRecipeForm">
                                 <input type="hidden" name="title" id="hiddenTitle">
                                 <input type="hidden" name="ingredients" id="hiddenIngredients">
                                 <input type="hidden" name="instructions" id="hiddenInstructions">
@@ -158,6 +156,7 @@
     </div>
 
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <th:block th:replace="~{fragments/navbar :: darkmode-script}"></th:block>
     <script th:inline="javascript">
         // 現在の保存数をサーバーから取得（Thymeleafのインライン展開）
         /*<![CDATA[*/
@@ -165,6 +164,10 @@
         /*]]>*/
         
         let currentCount = initialSavedCount;
+
+        // CSRFトークンをmetaタグから取得
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
         // 保存ボタンの制御
         const saveForm = document.getElementById('saveRecipeForm');
@@ -211,8 +214,11 @@
                 formData.append('id', id);
 
                 // AJAXで削除リクエスト
+                const deleteHeaders = {};
+                if (csrfHeader && csrfToken) deleteHeaders[csrfHeader] = csrfToken;
                 fetch('/recipe/delete/ajax', {
                     method: 'POST',
+                    headers: deleteHeaders,
                     body: formData
                 })
                 .then(response => {
@@ -263,8 +269,11 @@
 
             const formData = new FormData(document.getElementById('recipeForm'));
 
+            const generateHeaders = {};
+            if (csrfHeader && csrfToken) generateHeaders[csrfHeader] = csrfToken;
             fetch('/recipe/generate', {
                 method: 'POST',
+                headers: generateHeaders,
                 body: formData
             })
             .then(response => {

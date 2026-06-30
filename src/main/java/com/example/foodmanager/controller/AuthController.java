@@ -33,10 +33,26 @@ public class AuthController {
                              @RequestParam String password,
                              Model model,
                              HttpServletRequest request) {
+
+        if (username == null || username.isBlank() || username.length() < 3 || username.length() > 20) {
+            model.addAttribute("error", "ユーザー名は3〜20文字で入力してください。");
+            return "register";
+        }
+
+        if (email == null || email.isBlank()) {
+            model.addAttribute("error", "メールアドレスを入力してください。");
+            return "register";
+        }
+
+        if (!UserService.isPasswordStrongEnough(password)) {
+            model.addAttribute("error", UserService.PASSWORD_REQUIREMENT_MESSAGE);
+            return "register";
+        }
+
         try {
             // 1. ユーザー登録を実行
             userService.registerUser(username, email, password);
-            
+
             // 2. 自動ログイン処理
             try {
                 // ▼▼▼ 修正: username ではなく email を使ってログインさせる ▼▼▼
