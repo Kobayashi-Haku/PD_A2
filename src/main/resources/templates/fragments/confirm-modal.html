@@ -6,7 +6,7 @@
      使い方: data-confirm-target="#confirmDeleteModal" を持つフォームの submit を JS でフックし、
      #confirmDeleteForm に対象フォームの内容をコピーしてから表示します。
      （list.html 側のスクリプトで配線しています） */-->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+<div th:fragment="confirm-modal" class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
