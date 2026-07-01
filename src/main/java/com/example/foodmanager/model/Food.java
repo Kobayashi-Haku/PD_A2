@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 @Entity
@@ -46,5 +47,19 @@ public class Food {
         if (category == null) {
             category = FoodCategory.OTHER;
         }
+    }
+
+    @Transient
+    public long getDaysUntilExpiration() {
+        if (expirationDate == null) return Long.MAX_VALUE;
+        return ChronoUnit.DAYS.between(LocalDate.now(), expirationDate);
+    }
+
+    @Transient
+    public String getStatusKey() {
+        long days = getDaysUntilExpiration();
+        if (days < 0) return "expired";
+        if (days <= 3) return "warning";
+        return "ok";
     }
 }

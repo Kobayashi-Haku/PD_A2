@@ -60,7 +60,7 @@
                 <input type="date" class="form-control" id="expirationDate"
                        name="expirationDate" required
                        th:value="${food != null ? food.expirationDate : ''}"
-                       th:min="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}">
+                       th:min="${today}">
               </div>
               <div class="mb-3">
                 <label for="category" class="form-label">カテゴリ</label>

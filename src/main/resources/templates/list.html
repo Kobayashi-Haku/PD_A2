@@ -170,7 +170,7 @@
               <tbody>
                 <tr th:each="f : ${foods}"
                     th:data-name="${f.name}"
-                    th:attr="data-status=${f.expirationDate == null ? 'ok' : (T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate) < 0 ? 'expired' : (T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate) <= 3 ? 'warning' : 'ok'))}">
+                    th:attr="data-status=${f.statusKey}">
                   <td class="select-col">
                     <input type="checkbox" class="form-check-input food-row-checkbox" name="ids" th:value="${f.id}">
                   </td>
@@ -181,7 +181,7 @@
                   <td class="food-date" data-label="消費期限" th:text="${f.expirationDate != null ? f.expirationDate : '未設定'}"></td>
                   <td data-label="状態">
                     <th:block th:if="${f.expirationDate != null}">
-                      <span th:with="days=${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), f.expirationDate)}"
+                      <span th:with="days=${f.daysUntilExpiration}"
                             th:class="${days < 0 ? 'status-expired status-badge' : (days <= 3 ? 'status-warning status-badge' : 'status-ok status-badge')}">
                         <span th:if="${days < 0}">
                           <i class="bi bi-exclamation-triangle-fill"></i> 期限切れ

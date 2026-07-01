@@ -101,6 +101,7 @@ public class FoodController {
             model.addAttribute("food", new Food());
         }
         model.addAttribute("categories", FoodCategory.values());
+        model.addAttribute("today", java.time.LocalDate.now().toString());
         return "form";
     }
 
