@@ -11,145 +11,276 @@
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
     <style>
-        .fade-in { animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { background: #f0fdf4; }
+        .fade-in { animation: fadeIn 0.45s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
         .loading-spinner { display: none; }
         .recipe-card { display: none; }
+
+        /* Selection card */
+        .selection-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(22,163,74,0.10);
+            overflow: hidden;
+        }
+        .selection-card .card-header {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border: none;
+        }
+        .selection-card .card-header h5 {
+            font-weight: 700; margin: 0; font-size: 1.1rem;
+        }
+        .selection-card .card-body { padding: 1.5rem; }
+
+        /* Food item checkboxes */
+        .food-check-item {
+            border: 1.5px solid #d1fae5;
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .food-check-item:hover { background: #f0fdf4; border-color: #86efac; }
+        .food-check-item input[type="checkbox"] { width: 1.1em; height: 1.1em; border-radius: 5px; }
+        .food-check-item input:checked ~ * { color: #16a34a; }
+        .food-check-item:has(input:checked) {
+            background: #dcfce7; border-color: #16a34a;
+        }
+        .food-item-name { font-weight: 600; font-size: 0.95rem; }
+        .food-item-date { font-size: 0.78rem; color: #6b7280; }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            border: none; color: white; font-weight: 700;
+            border-radius: 12px; padding: 0.75rem 1rem;
+            font-size: 1.05rem;
+            box-shadow: 0 4px 14px rgba(22,163,74,0.28);
+            transition: all 0.2s;
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(22,163,74,0.38); color: white; }
+
+        /* Loading */
+        #loading { background: white; border-radius: 20px; padding: 3rem 2rem; box-shadow: 0 4px 24px rgba(22,163,74,0.10); }
+        .spinner-border { color: #16a34a !important; }
+        #loading h4 { color: #16a34a; font-weight: 700; }
+
+        /* Result card */
+        #resultCard {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(22,163,74,0.12);
+            overflow: hidden;
+        }
+        #resultCard .card-header {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+            padding: 1.25rem 1.5rem;
+        }
+        #resultCard .card-header h4 { font-weight: 800; margin: 0; }
+        #resultCard .card-body { padding: 1.75rem; }
+
+        .recipe-meta-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #f0fdf4; color: #16a34a;
+            border: 1.5px solid #d1fae5;
+            border-radius: 8px; padding: 0.3em 0.8em;
+            font-size: 0.85rem; font-weight: 600;
+        }
+
+        .recipe-section-title {
+            font-weight: 700; color: #14532d; font-size: 1rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #d1fae5;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-save-recipe {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border: none; color: white; font-weight: 700;
+            border-radius: 12px; padding: 0.7rem 1rem;
+            box-shadow: 0 4px 14px rgba(249,115,22,0.28);
+            transition: all 0.2s;
+        }
+        .btn-save-recipe:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249,115,22,0.38); color: white; }
+
+        .btn-retry {
+            border: 2px solid #d1fae5; color: #16a34a; font-weight: 600;
+            border-radius: 12px; padding: 0.65rem 1rem;
+            background: transparent; transition: all 0.2s;
+        }
+        .btn-retry:hover { background: #f0fdf4; color: #15803d; }
+
+        /* Dark mode */
+        [data-bs-theme="dark"] body { background: #0f172a; }
+        [data-bs-theme="dark"] .selection-card { background: #1e293b; }
+        [data-bs-theme="dark"] .food-check-item { border-color: #334155; }
+        [data-bs-theme="dark"] .food-check-item:hover { background: #0f172a; }
+        [data-bs-theme="dark"] .food-check-item:has(input:checked) { background: #14532d; border-color: #16a34a; }
+        [data-bs-theme="dark"] #loading { background: #1e293b; }
+        [data-bs-theme="dark"] #resultCard { background: #1e293b; }
+        [data-bs-theme="dark"] .recipe-meta-badge { background: #14532d; border-color: #166534; }
+        [data-bs-theme="dark"] .recipe-section-title { color: #86efac; border-color: #166534; }
+        [data-bs-theme="dark"] .btn-retry { border-color: #334155; color: #86efac; }
+        [data-bs-theme="dark"] .btn-retry:hover { background: #14532d; }
     </style>
 </head>
 <body>
-    <nav th:replace="~{fragments/navbar :: navbar('AIレシピ提案', 'bg-success', true, false, null)}"></nav>
+    <nav th:replace="~{fragments/navbar :: navbar('AIレシピ提案', 'bg-primary', true, false, null)}"></nav>
 
     <div class="container fade-in">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                
-                <div class="card shadow-sm mb-4" id="selectionCard">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">使いたい食材を選んでください</h5>
+
+                <div class="selection-card card mb-4" id="selectionCard">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-stars me-2"></i>AIレシピ提案</h5>
+                        <span style="font-size:1.8rem;">👨‍🍳</span>
                     </div>
                     <div class="card-body">
-                        <div th:if="${foods.isEmpty()}" class="alert alert-warning">
-                            食品が登録されていません。<a href="/add">食品を追加</a>してください。
+                        <p class="text-muted mb-3" style="font-size:0.9rem;">使いたい食材を選んでください。AIが最適なレシピを提案します。</p>
+
+                        <div th:if="${foods.isEmpty()}" class="alert alert-warning" style="border-radius: 10px;">
+                            <i class="bi bi-basket me-1"></i> 食品が登録されていません。<a href="/add" style="color: inherit; font-weight: 600;">食品を追加</a>してください。
                         </div>
-                        
+
                         <form id="recipeForm" th:unless="${foods.isEmpty()}">
-                            <div class="mb-3">
-                                <div class="list-group">
-                                    <label class="list-group-item" th:each="food : ${foods}">
-                                        <input class="form-check-input me-1" type="checkbox" 
+                            <div class="mb-4">
+                                <div th:each="food : ${foods}">
+                                    <label class="food-check-item">
+                                        <input class="form-check-input" type="checkbox"
                                                name="selectedFoodIds" th:value="${food.id}">
-                                        <span th:text="${food.name}">食品名</span>
-                                        <small class="text-muted ms-2" th:text="'(期限: ' + ${food.expirationDate} + ')'"></small>
+                                        <div>
+                                            <div class="food-item-name" th:text="${food.name}">食品名</div>
+                                            <div class="food-item-date">
+                                                <i class="bi bi-calendar3 me-1"></i><span th:text="${food.expirationDate}"></span>
+                                            </div>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
                             <div class="d-grid">
-                                <button type="button" class="btn btn-success btn-lg" onclick="generateRecipe()">
-                                    <i class="bi bi-stars"></i> レシピを生成する
+                                <button type="button" class="btn btn-generate" onclick="generateRecipe()">
+                                    <i class="bi bi-stars me-2"></i> レシピを生成する
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <div id="loading" class="text-center py-5 loading-spinner">
-                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                <div id="loading" class="text-center py-5 loading-spinner mb-4">
+                    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <h4 class="mt-3 text-muted">AIがレシピを考えています...</h4>
-                    <p>これには数秒〜10秒ほどかかります</p>
+                    <h4 class="mt-3">AIがレシピを考えています...</h4>
+                    <p class="text-muted">これには数秒〜10秒ほどかかります</p>
                 </div>
 
-                <div id="resultCard" class="card shadow recipe-card">
-                    <div class="card-header bg-success text-white">
+                <div id="resultCard" class="card recipe-card mb-4">
+                    <div class="card-header">
                         <h4 class="mb-0" id="recipeTitle">料理名</h4>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <span class="badge bg-light text-dark border me-2">
+                        <div class="mb-3 d-flex gap-2 flex-wrap">
+                            <span class="recipe-meta-badge">
                                 <i class="bi bi-clock"></i> <span id="cookingTime"></span>
                             </span>
-                            <span class="badge bg-light text-dark border">
+                            <span class="recipe-meta-badge">
                                 <i class="bi bi-bar-chart"></i> <span id="difficulty"></span>
                             </span>
                         </div>
 
-                        <h5 class="border-bottom pb-2"><i class="bi bi-basket"></i> 材料</h5>
-                        <p id="ingredients" class="mb-4" style="white-space: pre-wrap;"></p>
+                        <div class="recipe-section-title"><i class="bi bi-basket-fill"></i> 材料</div>
+                        <p id="ingredients" class="mb-4" style="white-space: pre-wrap; font-size: 0.95rem;"></p>
 
-                        <h5 class="border-bottom pb-2"><i class="bi bi-list-ol"></i> 作り方</h5>
-                        <p id="instructions" style="white-space: pre-wrap;"></p>
+                        <div class="recipe-section-title"><i class="bi bi-list-ol"></i> 作り方</div>
+                        <p id="instructions" style="white-space: pre-wrap; font-size: 0.95rem;"></p>
 
-                        <div class="d-grid gap-2 mt-4 pt-3 border-top">
+                        <div class="d-grid gap-2 mt-4 pt-3" style="border-top: 1px solid #d1fae5;">
                             <form method="post" th:action="@{/recipe/save}" id="saveRecipeForm">
                                 <input type="hidden" name="title" id="hiddenTitle">
                                 <input type="hidden" name="ingredients" id="hiddenIngredients">
                                 <input type="hidden" name="instructions" id="hiddenInstructions">
                                 <input type="hidden" name="cookingTime" id="hiddenCookingTime">
                                 <input type="hidden" name="difficulty" id="hiddenDifficulty">
-                                
-                                <button type="submit" class="btn btn-warning text-dark w-100 fw-bold">
-                                    <i class="bi bi-star-fill"></i> このレシピをお気に入りに保存
+                                <button type="submit" class="btn btn-save-recipe w-100">
+                                    <i class="bi bi-star-fill me-1"></i> このレシピをお気に入りに保存
                                 </button>
                             </form>
-
-                            <button type="button" class="btn btn-outline-success" onclick="resetForm()">
-                                <i class="bi bi-arrow-clockwise"></i> 別のレシピを考える
+                            <button type="button" class="btn btn-retry" onclick="resetForm()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> 別のレシピを考える
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div id="errorAlert" class="alert alert-danger mt-3" style="display: none;">
-                    <strong>エラー:</strong> <span id="errorMessage"></span>
+                <div id="errorAlert" class="alert alert-danger mt-3" style="display: none; border-radius: 12px;">
+                    <strong><i class="bi bi-exclamation-triangle me-1"></i> エラー:</strong> <span id="errorMessage"></span>
                 </div>
 
             </div>
         </div>
     </div>
 
+    <!-- 上限モーダル -->
     <div class="modal fade" id="limitModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-warning">
-            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> お気に入りレシピの上限</h5>
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
+          <div class="modal-header" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 16px 16px 0 0; border-bottom: none;">
+            <h5 class="modal-title fw-bold" style="color: #d97706;">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> お気に入りレシピの上限
+            </h5>
           </div>
-          <div class="modal-body">
+          <div class="modal-body py-4">
             <p class="mb-0">お気に入りレシピの登録は10個までです。<br>お気に入りレシピの中からどれか削除しますか？</p>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="btnLimitNo">いいえ（ホームへ）</button>
-            <button type="button" class="btn btn-primary" id="btnLimitYes">はい（削除する）</button>
+          <div class="modal-footer" style="border-top: 1px solid #f3f4f6;">
+            <button type="button" class="btn btn-outline-secondary" id="btnLimitNo" style="border-radius: 10px;">いいえ（ホームへ）</button>
+            <button type="button" class="btn" id="btnLimitYes"
+                    style="background: linear-gradient(135deg, #16a34a, #15803d); color:white; border-radius:10px; font-weight:600;">はい（削除する）</button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- 削除選択モーダル -->
     <div class="modal fade" id="deleteSelectModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">どれを削除しますか？</h5>
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
+          <div class="modal-header" style="border-radius: 16px 16px 0 0;">
+            <h5 class="modal-title fw-bold">どれを削除しますか？</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p class="text-muted small">削除ボタンを押すとすぐに削除されます。</p>
-            <div class="list-group">
-              <div th:each="recipe : ${savedRecipes}" class="list-group-item d-flex justify-content-between align-items-center" th:id="'recipe-row-' + ${recipe.id}">
+            <div>
+              <div th:each="recipe : ${savedRecipes}"
+                   class="d-flex justify-content-between align-items-center p-3 mb-2"
+                   style="border: 1.5px solid #d1fae5; border-radius: 12px;"
+                   th:id="'recipe-row-' + ${recipe.id}">
                  <div>
                      <span class="fw-bold" th:text="${recipe.title}">料理名</span>
                      <br>
                      <small class="text-muted" th:text="${#temporals.format(recipe.savedAt, 'yyyy/MM/dd HH:mm')}">日付</small>
                  </div>
-                 <button class="btn btn-outline-danger btn-sm delete-recipe-btn" th:data-id="${recipe.id}">
-                    <i class="bi bi-trash"></i> 削除
+                 <button class="btn btn-sm btn-outline-danger delete-recipe-btn"
+                         style="border-radius: 8px; font-weight: 600;"
+                         th:data-id="${recipe.id}">
+                    <i class="bi bi-trash me-1"></i> 削除
                  </button>
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <div class="modal-footer" style="border-top: 1px solid #f3f4f6;">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 10px;">キャンセル</button>
           </div>
         </div>
       </div>
@@ -158,30 +289,26 @@
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <th:block th:replace="~{fragments/navbar :: darkmode-script}"></th:block>
     <script th:inline="javascript">
-        // 現在の保存数をサーバーから取得（Thymeleafのインライン展開）
         /*<![CDATA[*/
         const initialSavedCount = /*[[${savedRecipes != null ? savedRecipes.size() : 0}]]*/ 0;
         /*]]>*/
-        
+
         let currentCount = initialSavedCount;
 
-        // CSRFトークンをmetaタグから取得
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
-        // 保存ボタンの制御
         const saveForm = document.getElementById('saveRecipeForm');
         if (saveForm) {
             saveForm.addEventListener('submit', function(e) {
                 if (currentCount >= 10) {
-                    e.preventDefault(); // 送信をブロック
+                    e.preventDefault();
                     const limitModal = new bootstrap.Modal(document.getElementById('limitModal'));
                     limitModal.show();
                 }
             });
         }
 
-        // モーダル1: 「いいえ」 -> ホームへ
         const btnNo = document.getElementById('btnLimitNo');
         if(btnNo) {
             btnNo.addEventListener('click', function() {
@@ -189,22 +316,17 @@
             });
         }
 
-        // モーダル1: 「はい」 -> 削除選択モーダルを開く
         const btnYes = document.getElementById('btnLimitYes');
         if(btnYes) {
             btnYes.addEventListener('click', function() {
-                // 現在のモーダルを閉じる
                 const limitModalEl = document.getElementById('limitModal');
                 const limitModal = bootstrap.Modal.getInstance(limitModalEl);
                 limitModal.hide();
-
-                // 削除モーダルを開く
                 const deleteModal = new bootstrap.Modal(document.getElementById('deleteSelectModal'));
                 deleteModal.show();
             });
         }
 
-        // 削除ボタンの処理（AJAX）
         document.querySelectorAll('.delete-recipe-btn').forEach(button => {
             button.addEventListener('click', function() {
                 if(!confirm('本当に削除しますか？')) return;
@@ -213,7 +335,6 @@
                 const formData = new FormData();
                 formData.append('id', id);
 
-                // AJAXで削除リクエスト
                 const deleteHeaders = {};
                 if (csrfHeader && csrfToken) deleteHeaders[csrfHeader] = csrfToken;
                 fetch('/recipe/delete/ajax', {
@@ -223,19 +344,12 @@
                 })
                 .then(response => {
                     if(response.ok) {
-                        // 画面から行を消す
                         const row = document.getElementById('recipe-row-' + id);
                         if(row) row.remove();
-                        
-                        // カウントを減らす
                         currentCount--;
-                        
-                        // 削除モーダルを閉じる
                         const deleteModalEl = document.getElementById('deleteSelectModal');
                         const deleteModal = bootstrap.Modal.getInstance(deleteModalEl);
                         deleteModal.hide();
-
-                        // ユーザーに通知
                         alert('レシピを削除しました。\nこれで新しいレシピを保存できます！');
                     } else {
                         alert('削除に失敗しました。');
@@ -248,7 +362,6 @@
             });
         });
 
-        // --- 生成ロジック ---
         function generateRecipe() {
             const checkboxes = document.querySelectorAll('input[name="selectedFoodIds"]:checked');
             if (checkboxes.length === 0) {
@@ -256,7 +369,6 @@
                 return;
             }
 
-            // IDが存在するか確認してから操作
             const selectionCard = document.getElementById('selectionCard');
             const loading = document.getElementById('loading');
             const resultCard = document.getElementById('resultCard');
@@ -301,8 +413,7 @@
                 if(loading) loading.style.display = 'none';
                 if(selectionCard) selectionCard.style.display = 'block';
                 if(errorAlert) errorAlert.style.display = 'block';
-                
-                document.getElementById('errorMessage').textContent = 
+                document.getElementById('errorMessage').textContent =
                     'AIとの通信に失敗しました。一時的な不具合の可能性がありますので、もう一度お試しいただくか、しばらく時間を置いてから再度お試しください。';
             });
         }

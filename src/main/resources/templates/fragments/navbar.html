@@ -10,21 +10,28 @@
        showUser  - trueならユーザーメニュー（設定・ログアウト）を表示
 */-->
 <nav th:fragment="navbar(title, navClass, showBack, showUser, currentUser)"
-     class="navbar navbar-dark mb-4" th:classappend="${navClass != null ? navClass : 'bg-primary'}">
+     class="navbar navbar-dark mb-4"
+     style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); box-shadow: 0 2px 12px rgba(22,163,74,0.18);">
   <div class="container">
-    <span class="navbar-brand mb-0 h1" th:text="${title}">食品消費期限管理</span>
+    <span class="navbar-brand mb-0 h1" style="font-weight: 700; letter-spacing: -0.5px;">
+      🌿 <span th:text="${title}">食品消費期限管理</span>
+    </span>
 
     <div class="d-flex align-items-center">
-      <button type="button" id="darkModeToggle" class="btn btn-sm btn-outline-light me-2" title="ダークモード切替">
+      <button type="button" id="darkModeToggle" class="btn btn-sm me-2"
+              style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px;"
+              title="ダークモード切替">
         <i class="bi bi-moon-stars-fill" id="darkModeIcon"></i>
       </button>
 
-      <a th:if="${showBack}" href="/" class="btn btn-outline-light btn-sm me-2">
+      <a th:if="${showBack}" href="/" class="btn btn-sm me-2"
+         style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px;">
         <i class="bi bi-arrow-left"></i> 一覧に戻る
       </a>
 
       <th:block th:if="${showUser}">
-        <a href="/settings" class="settings-icon" title="設定" style="font-size:1.3rem;margin-right:15px;color:rgba(255,255,255,0.8);">
+        <a href="/settings" class="settings-icon" title="設定"
+           style="font-size:1.3rem; margin-right:15px; color:rgba(255,255,255,0.85); transition: color 0.2s;">
           <i class="bi bi-gear-fill"></i>
         </a>
 
@@ -32,12 +39,18 @@
           <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-person-circle" style="font-size: 1.3rem;"></i>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-            <li th:if="${currentUser != null}"><h6 class="dropdown-header"><span th:text="${currentUser.username}">ユーザー</span> 様</h6></li>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown"
+              style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); border: none; padding: 8px;">
+            <li th:if="${currentUser != null}">
+              <h6 class="dropdown-header" style="color: #16a34a; font-weight: 600;">
+                <i class="bi bi-person-circle me-1"></i>
+                <span th:text="${currentUser.username}">ユーザー</span> 様
+              </h6>
+            </li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form method="post" th:action="@{/logout}" style="margin: 0;">
-                <button type="submit" class="dropdown-item text-danger">
+                <button type="submit" class="dropdown-item text-danger" style="border-radius: 8px;">
                   <i class="bi bi-box-arrow-right"></i> ログアウト
                 </button>
               </form>

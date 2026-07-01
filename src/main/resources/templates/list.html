@@ -11,47 +11,163 @@
   <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
   <style>
-    .status-expired { color: #dc3545; }
-    .status-warning { color: #ffc107; }
-    .status-ok { color: #198754; }
-    .fade-in { animation: fadeIn 0.5s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    body { background: #f0fdf4; }
+    .fade-in { animation: fadeIn 0.45s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* テーブルを見やすく */
-    .food-table { font-size: 1.1rem; }
-    .food-table th { font-size: 1.1rem; font-weight: 600; padding: 15px 12px; }
-    .food-table td { padding: 12px; vertical-align: middle; }
-    .food-name { font-weight: 500; font-size: 1.15rem; }
-
-    .stat-card { border: none; border-radius: 0.75rem; }
-    .stat-card .stat-number { font-size: 2rem; font-weight: 700; }
-
-    .category-badge { font-size: 0.8rem; }
-
-    /* 狭い画面ではテーブルをカード風に積み上げる */
-    @media (max-width: 767.98px) {
-      .food-table thead { display: none; }
-      .food-table, .food-table tbody, .food-table tr, .food-table td { display: block; width: 100%; }
-      .food-table tr {
-        margin-bottom: 1rem;
-        border: 1px solid var(--bs-border-color);
-        border-radius: 0.5rem;
-        padding: 0.5rem;
-      }
-      .food-table td {
-        text-align: left;
-        padding: 0.4rem 0.6rem;
-        border: none !important;
-      }
-      .food-table td.select-col::before { content: ""; }
-      .food-table td:not(.select-col)::before {
-        content: attr(data-label);
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--bs-secondary-color, #6c757d);
-      }
+    /* ── Stat cards ── */
+    .stat-card {
+      border: none;
+      border-radius: 16px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      transition: transform 0.2s;
     }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card.stat-total  { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .stat-card.stat-warn   { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .stat-card.stat-danger { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+    .stat-number { font-size: 2.2rem; font-weight: 800; line-height: 1; margin: 0.3rem 0; }
+    .stat-total  .stat-number { color: #16a34a; }
+    .stat-warn   .stat-number { color: #d97706; }
+    .stat-danger .stat-number { color: #dc2626; }
+    .stat-label { font-size: 0.8rem; font-weight: 600; color: #6b7280; letter-spacing: 0.04em; }
+
+    /* ── Action buttons ── */
+    .btn-action-primary {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border: none; color: white; font-weight: 600;
+      border-radius: 10px; padding: 0.55rem 1.1rem;
+      box-shadow: 0 3px 10px rgba(22,163,74,0.25);
+      transition: all 0.2s;
+    }
+    .btn-action-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(22,163,74,0.35); color: white; }
+
+    .btn-action-recipe {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border: none; color: white; font-weight: 600;
+      border-radius: 10px; padding: 0.55rem 1.1rem;
+      box-shadow: 0 3px 10px rgba(249,115,22,0.25);
+      transition: all 0.2s;
+    }
+    .btn-action-recipe:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(249,115,22,0.35); color: white; }
+
+    /* ── Tabs ── */
+    .nav-tabs { border-bottom: 2px solid #bbf7d0; }
+    .nav-tabs .nav-link {
+      color: #6b7280; font-weight: 600; border: none;
+      border-radius: 10px 10px 0 0; padding: 0.65rem 1.25rem;
+      transition: all 0.2s;
+    }
+    .nav-tabs .nav-link:hover { color: #16a34a; background: #f0fdf4; }
+    .nav-tabs .nav-link.active {
+      color: #16a34a; background: white;
+      border-bottom: 3px solid #16a34a;
+      box-shadow: 0 -2px 8px rgba(22,163,74,0.08);
+    }
+
+    /* ── Search/filter ── */
+    #foodSearchInput { border-radius: 10px; border: 1.5px solid #bbf7d0; }
+    #foodSearchInput:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.12); }
+    .status-filter-btn {
+      border-radius: 8px !important; font-size: 0.82rem; font-weight: 600;
+      padding: 0.35rem 0.8rem; border-width: 1.5px;
+    }
+    .status-filter-btn.active.btn-outline-secondary { background: #6b7280; color: white; }
+
+    /* ── Food cards ── */
+    .food-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      transition: transform 0.18s, box-shadow 0.18s;
+      overflow: hidden;
+      position: relative;
+    }
+    .food-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+
+    /* Status stripe on top */
+    .food-card::before {
+      content: '';
+      display: block;
+      height: 4px;
+      width: 100%;
+    }
+    .food-card[data-status="ok"]::before      { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .food-card[data-status="warning"]::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .food-card[data-status="expired"]::before { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+    .food-card .card-body { padding: 1rem 1rem 0.75rem; }
+    .food-card .card-footer {
+      background: transparent;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding: 0.6rem 1rem;
+    }
+
+    .food-category-badge {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+      padding: 0.25em 0.65em; border-radius: 6px;
+      background: #dcfce7; color: #16a34a;
+    }
+    .food-name {
+      font-size: 1.1rem; font-weight: 700; margin: 0.5rem 0 0.4rem;
+      color: #111827; line-height: 1.3;
+    }
+    .expiry-date {
+      font-size: 0.8rem; color: #6b7280;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .days-badge {
+      display: inline-block; font-size: 0.8rem; font-weight: 700;
+      padding: 0.25em 0.7em; border-radius: 8px; margin-top: 0.4rem;
+    }
+    .days-badge.status-ok      { background: #dcfce7; color: #16a34a; }
+    .days-badge.status-warning { background: #fef3c7; color: #d97706; }
+    .days-badge.status-expired { background: #fee2e2; color: #dc2626; }
+
+    .btn-edit-sm {
+      background: #fef3c7; border: none; color: #d97706; font-weight: 600;
+      border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem;
+      transition: all 0.15s;
+    }
+    .btn-edit-sm:hover { background: #fde68a; color: #b45309; }
+    .btn-delete-sm {
+      background: #fee2e2; border: none; color: #dc2626; font-weight: 600;
+      border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem;
+      transition: all 0.15s;
+    }
+    .btn-delete-sm:hover { background: #fecaca; color: #991b1b; }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 4rem 1rem; }
+    .empty-state i { font-size: 3rem; color: #bbf7d0; }
+    .empty-state p { color: #9ca3af; margin-top: 1rem; }
+
+    /* ── Saved recipe cards ── */
+    .recipe-card-item {
+      border-radius: 14px; border: none;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    .recipe-card-item .card-header {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border-radius: 14px 14px 0 0 !important;
+      border-bottom: 1px solid #bbf7d0;
+      font-weight: 700; color: #15803d;
+    }
+
+    /* ── Dark mode ── */
+    [data-bs-theme="dark"] body { background: #0f172a; }
+    [data-bs-theme="dark"] .stat-card.stat-total  { background: #14532d; }
+    [data-bs-theme="dark"] .stat-card.stat-warn   { background: #78350f; }
+    [data-bs-theme="dark"] .stat-card.stat-danger { background: #7f1d1d; }
+    [data-bs-theme="dark"] .food-card { background: #1e293b; }
+    [data-bs-theme="dark"] .food-name { color: #f1f5f9; }
+    [data-bs-theme="dark"] .food-category-badge { background: #14532d; color: #86efac; }
+    [data-bs-theme="dark"] .nav-tabs { border-bottom-color: #166534; }
+    [data-bs-theme="dark"] .nav-tabs .nav-link.active { background: #1e293b; }
+    [data-bs-theme="dark"] .recipe-card-item { background: #1e293b; }
+    [data-bs-theme="dark"] .recipe-card-item .card-header { background: #14532d; border-color: #166534; }
   </style>
 </head>
 <body>
@@ -63,200 +179,206 @@
     <!-- ダッシュボード統計カード -->
     <div class="row mb-4 g-3">
       <div class="col-6 col-md-4">
-        <div class="card stat-card shadow-sm text-center p-3">
-          <i class="bi bi-basket text-primary" style="font-size:1.5rem;"></i>
-          <div class="stat-number text-primary" th:text="${totalCount}">0</div>
-          <div class="text-muted small">登録食品数</div>
+        <div class="stat-card stat-total">
+          <i class="bi bi-basket2-fill" style="font-size:1.6rem; color:#16a34a;"></i>
+          <div class="stat-number" th:text="${totalCount}">0</div>
+          <div class="stat-label">登録食品数</div>
         </div>
       </div>
       <div class="col-6 col-md-4">
-        <div class="card stat-card shadow-sm text-center p-3">
-          <i class="bi bi-clock text-warning" style="font-size:1.5rem;"></i>
-          <div class="stat-number text-warning" th:text="${expiringSoonCount}">0</div>
-          <div class="text-muted small">期限間近</div>
+        <div class="stat-card stat-warn">
+          <i class="bi bi-clock-fill" style="font-size:1.6rem; color:#d97706;"></i>
+          <div class="stat-number" th:text="${expiringSoonCount}">0</div>
+          <div class="stat-label">期限間近</div>
         </div>
       </div>
       <div class="col-6 col-md-4">
-        <div class="card stat-card shadow-sm text-center p-3">
-          <i class="bi bi-exclamation-triangle text-danger" style="font-size:1.5rem;"></i>
-          <div class="stat-number text-danger" th:text="${expiredCount}">0</div>
-          <div class="text-muted small">期限切れ</div>
+        <div class="stat-card stat-danger">
+          <i class="bi bi-exclamation-triangle-fill" style="font-size:1.6rem; color:#dc2626;"></i>
+          <div class="stat-number" th:text="${expiredCount}">0</div>
+          <div class="stat-label">期限切れ</div>
         </div>
       </div>
     </div>
 
+    <!-- アクションボタン -->
     <div class="row mb-4">
       <div class="col d-flex flex-wrap gap-2">
-        <a href="/add" class="btn btn-primary">
-          <i class="bi bi-plus-circle"></i> 食品を追加
+        <a href="/add" class="btn btn-action-primary">
+          <i class="bi bi-plus-circle-fill me-1"></i> 食品を追加
         </a>
-        <a href="/recipe/suggest" class="btn btn-success">
-          <i class="bi bi-lightbulb"></i> レシピ提案
+        <a href="/recipe/suggest" class="btn btn-action-recipe">
+          <i class="bi bi-stars me-1"></i> AIレシピ提案
         </a>
-        <a href="/export/csv" class="btn btn-outline-secondary">
-          <i class="bi bi-file-earmark-spreadsheet"></i> CSVエクスポート
+        <a href="/export/csv" class="btn btn-outline-secondary" style="border-radius: 10px; font-weight: 600;">
+          <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSVエクスポート
         </a>
-        <button type="button" class="btn btn-outline-danger" id="deleteExpiredBtn">
-          <i class="bi bi-trash3"></i> 期限切れを一括削除
+        <button type="button" class="btn btn-outline-danger" id="deleteExpiredBtn"
+                style="border-radius: 10px; font-weight: 600;">
+          <i class="bi bi-trash3 me-1"></i> 期限切れを一括削除
         </button>
       </div>
     </div>
 
-    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px;">
       <strong>エラー:</strong> <span th:text="${param.error[0] == 'limit_reached' ? 'レシピの保存は10件までです。' : 'エラーが発生しました。'}"></span>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    <div th:if="${param.saved}" class="alert alert-success alert-dismissible fade show" role="alert">
-      レシピを保存しました！
+    <div th:if="${param.saved}" class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px;">
+      <i class="bi bi-star-fill me-1"></i> レシピを保存しました！
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+    <!-- タブ -->
     <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="foods-tab" data-bs-toggle="tab" data-bs-target="#foods" type="button" role="tab" aria-controls="foods" aria-selected="true">
-          <i class="bi bi-basket"></i> 食品一覧
+          <i class="bi bi-basket2 me-1"></i> 食品一覧
         </button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="false">
-          <i class="bi bi-journal-bookmark"></i> お気に入りレシピ
-          <span class="badge bg-secondary" th:text="${savedRecipes != null ? savedRecipes.size() : 0}">0</span>
+          <i class="bi bi-journal-bookmark me-1"></i> お気に入りレシピ
+          <span class="badge ms-1" style="background:#16a34a; border-radius:6px;" th:text="${savedRecipes != null ? savedRecipes.size() : 0}">0</span>
         </button>
       </li>
     </ul>
 
     <div class="tab-content" id="myTabContent">
 
+      <!-- 食品一覧タブ -->
       <div class="tab-pane fade show active" id="foods" role="tabpanel" aria-labelledby="foods-tab">
 
         <!-- 検索・フィルター -->
         <div class="row g-2 mb-3 align-items-center">
           <div class="col-md-5">
-            <input type="text" id="foodSearchInput" class="form-control" placeholder="食品名で検索...">
+            <input type="text" id="foodSearchInput" class="form-control" placeholder="🔍 食品名で検索...">
           </div>
           <div class="col-md-7">
-            <div class="btn-group flex-wrap" role="group" aria-label="状態フィルター">
+            <div class="btn-group flex-wrap gap-1" role="group" aria-label="状態フィルター">
               <button type="button" class="btn btn-outline-secondary status-filter-btn active" data-filter="all">すべて</button>
-              <button type="button" class="btn btn-outline-success status-filter-btn" data-filter="ok">有効</button>
-              <button type="button" class="btn btn-outline-warning status-filter-btn" data-filter="warning">期限間近</button>
-              <button type="button" class="btn btn-outline-danger status-filter-btn" data-filter="expired">期限切れ</button>
+              <button type="button" class="btn btn-outline-success status-filter-btn" data-filter="ok">✓ 有効</button>
+              <button type="button" class="btn btn-outline-warning status-filter-btn" data-filter="warning">⚠ 期限間近</button>
+              <button type="button" class="btn btn-outline-danger status-filter-btn" data-filter="expired">✕ 期限切れ</button>
             </div>
           </div>
         </div>
 
         <form id="bulkDeleteForm" method="post" th:action="@{/delete/bulk}">
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+              <input class="form-check-input" type="checkbox" id="selectAllCheckbox" style="border-radius: 5px;">
               <label class="form-check-label small text-muted" for="selectAllCheckbox">すべて選択</label>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-danger" id="bulkDeleteBtn" disabled>
-              <i class="bi bi-trash"></i> 選択した項目を削除
+            <button type="button" class="btn btn-sm btn-outline-danger" id="bulkDeleteBtn" disabled style="border-radius: 8px; font-weight: 600;">
+              <i class="bi bi-trash me-1"></i> 選択した項目を削除
             </button>
           </div>
 
-          <div class="table-responsive">
-            <table class="table table-hover food-table">
-              <thead class="table-light">
-                <tr>
-                  <th style="width: 40px;"></th>
-                  <th>名称</th>
-                  <th>カテゴリ</th>
-                  <th>消費期限</th>
-                  <th>状態</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="f : ${foods}"
-                    th:data-name="${f.name}"
-                    th:attr="data-status=${f.statusKey}">
-                  <td class="select-col">
-                    <input type="checkbox" class="form-check-input food-row-checkbox" name="ids" th:value="${f.id}">
-                  </td>
-                  <td class="food-name" data-label="名称" th:text="${f.name}"></td>
-                  <td data-label="カテゴリ">
-                    <span class="badge bg-secondary category-badge" th:text="${f.category != null ? f.category.label : 'その他'}"></span>
-                  </td>
-                  <td class="food-date" data-label="消費期限" th:text="${f.expirationDate != null ? f.expirationDate : '未設定'}"></td>
-                  <td data-label="状態">
-                    <th:block th:if="${f.expirationDate != null}">
-                      <span th:with="days=${f.daysUntilExpiration}"
-                            th:class="${days < 0 ? 'status-expired status-badge' : (days <= 3 ? 'status-warning status-badge' : 'status-ok status-badge')}">
-                        <span th:if="${days < 0}">
-                          <i class="bi bi-exclamation-triangle-fill"></i> 期限切れ
-                        </span>
-                        <span th:if="${days <= 3 && days >= 0}">
-                          <i class="bi bi-clock"></i> 間近（残り<span th:text="${days}"></span>日）
-                        </span>
-                        <span th:if="${days > 3}">
-                          <i class="bi bi-check-circle"></i> 有効（残り<span th:text="${days}"></span>日）
-                        </span>
+          <!-- Card grid -->
+          <div class="row g-3" id="foodCardGrid">
+            <th:block th:each="f : ${foods}">
+            <div class="col-12 col-sm-6 col-lg-4 food-card-col"
+                 th:attr="data-name=${f.name}, data-status=${f.statusKey}">
+              <div class="food-card card h-100"
+                   th:attr="data-status=${f.statusKey}, data-name=${f.name}">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <span class="food-category-badge"
+                          th:text="${f.category != null ? f.category.label : 'その他'}">カテゴリ</span>
+                    <input type="checkbox" class="form-check-input food-row-checkbox"
+                           name="ids" th:value="${f.id}"
+                           style="border-radius: 5px; width: 1.1em; height: 1.1em;">
+                  </div>
+                  <div class="food-name" th:text="${f.name}">食品名</div>
+                  <div class="expiry-date">
+                    <i class="bi bi-calendar3"></i>
+                    <span th:text="${f.expirationDate != null ? f.expirationDate : '未設定'}"></span>
+                  </div>
+                  <!-- 状態バッジ -->
+                  <th:block th:if="${f.expirationDate != null}">
+                    <span th:with="days=${f.daysUntilExpiration}"
+                          th:class="${days < 0 ? 'days-badge status-expired' : (days <= 3 ? 'days-badge status-warning' : 'days-badge status-ok')}">
+                      <span th:if="${days < 0}">
+                        <i class="bi bi-exclamation-triangle-fill"></i> 期限切れ
                       </span>
-                    </th:block>
-                    <th:block th:unless="${f.expirationDate != null}">
-                      <span class="badge bg-secondary">日付未設定</span>
-                    </th:block>
-                  </td>
-                  <td data-label="操作">
-                    <a th:href="@{/edit/{id}(id=${f.id})}" class="btn btn-warning btn-sm me-2">
-                      <i class="bi bi-pencil"></i> 編集
-                    </a>
-                    <form method="post" th:action="@{/delete}" class="d-inline single-delete-form">
-                      <input type="hidden" name="id" th:value="${f.id}" />
-                      <button type="submit" class="btn btn-danger btn-sm">
-                        <i class="bi bi-trash"></i> 削除
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div th:if="${foods == null || foods.isEmpty()}" class="text-center py-5">
-              <p class="text-muted">登録された食品はありません。</p>
+                      <span th:if="${days <= 3 && days >= 0}">
+                        <i class="bi bi-clock-fill"></i> 残り<span th:text="${days}"></span>日
+                      </span>
+                      <span th:if="${days > 3}">
+                        <i class="bi bi-check-circle-fill"></i> 残り<span th:text="${days}"></span>日
+                      </span>
+                    </span>
+                  </th:block>
+                  <th:block th:unless="${f.expirationDate != null}">
+                    <span class="days-badge" style="background:#f3f4f6; color:#6b7280;">日付未設定</span>
+                  </th:block>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                  <a th:href="@{/edit/{id}(id=${f.id})}" class="btn btn-edit-sm flex-fill text-center">
+                    <i class="bi bi-pencil me-1"></i> 編集
+                  </a>
+                  <form method="post" th:action="@{/delete}" class="d-inline single-delete-form flex-fill">
+                    <input type="hidden" name="id" th:value="${f.id}" />
+                    <button type="submit" class="btn btn-delete-sm w-100">
+                      <i class="bi bi-trash me-1"></i> 削除
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
-            <div id="noResultsMessage" class="text-center py-5" style="display:none;">
-              <p class="text-muted">条件に一致する食品が見つかりません。</p>
-            </div>
+            </th:block>
+          </div>
+
+          <div th:if="${foods == null || foods.isEmpty()}" class="empty-state">
+            <i class="bi bi-basket2"></i>
+            <p>登録された食品はありません。<br>「食品を追加」から始めましょう！</p>
+          </div>
+          <div id="noResultsMessage" class="empty-state" style="display:none;">
+            <i class="bi bi-search"></i>
+            <p>条件に一致する食品が見つかりません。</p>
           </div>
         </form>
       </div>
 
+      <!-- お気に入りレシピタブ -->
       <div class="tab-pane fade" id="recipes" role="tabpanel" aria-labelledby="recipes-tab">
-        <div th:if="${savedRecipes == null || savedRecipes.isEmpty()}" class="text-center py-5 text-muted">
-          <i class="bi bi-journal-x" style="font-size: 2rem;"></i>
-          <p class="mt-2">保存されたレシピはありません</p>
+        <div th:if="${savedRecipes == null || savedRecipes.isEmpty()}" class="empty-state">
+          <i class="bi bi-journal-x" style="color: #bbf7d0; font-size: 3rem;"></i>
+          <p>保存されたレシピはありません</p>
         </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3" th:each="recipe : ${savedRecipes}">
-            <div class="card h-100">
+        <div class="row g-3">
+          <div class="col-md-6" th:each="recipe : ${savedRecipes}">
+            <div class="card recipe-card-item h-100">
               <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold" th:text="${recipe.title}">料理名</h6>
+                <h6 class="mb-0" th:text="${recipe.title}">料理名</h6>
                 <form method="post" th:action="@{/recipe/delete}" class="single-delete-form">
                   <input type="hidden" name="id" th:value="${recipe.id}">
-                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <button type="submit" class="btn btn-sm btn-delete-sm">
                     <i class="bi bi-trash"></i>
                   </button>
                 </form>
               </div>
               <div class="card-body">
                 <p class="small text-muted mb-2">
-                  <i class="bi bi-clock"></i> <span th:text="${recipe.cookingTime}"></span> /
-                  <i class="bi bi-bar-chart"></i> <span th:text="${recipe.difficulty}"></span>
+                  <i class="bi bi-clock me-1"></i><span th:text="${recipe.cookingTime}"></span>
+                  &nbsp;·&nbsp;
+                  <i class="bi bi-bar-chart me-1"></i><span th:text="${recipe.difficulty}"></span>
                 </p>
-                <button class="btn btn-sm btn-outline-primary w-100 mb-2" type="button"
+                <button class="btn btn-sm w-100 mb-2" type="button"
                         data-bs-toggle="collapse"
                         th:data-bs-target="'#collapse-' + ${recipe.id}"
-                        aria-expanded="false">
+                        aria-expanded="false"
+                        style="background:#f0fdf4; color:#16a34a; border: 1.5px solid #bbf7d0; border-radius:8px; font-weight:600;">
                   詳細を見る <i class="bi bi-chevron-down"></i>
                 </button>
                 <div class="collapse" th:id="'collapse-' + ${recipe.id}">
-                  <div class="card card-body bg-light mt-2">
-                    <strong><i class="bi bi-basket"></i> 材料:</strong>
-                    <p class="small mb-2" th:text="${recipe.ingredients}">データなし</p>
-                    <strong><i class="bi bi-list-ol"></i> 作り方:</strong>
-                    <p class="small mb-0" th:text="${recipe.instructions}" style="white-space: pre-wrap;">データなし</p>
+                  <div class="mt-2 p-3" style="background:#f8fafc; border-radius:10px; font-size:0.875rem;">
+                    <strong><i class="bi bi-basket me-1"></i> 材料:</strong>
+                    <p class="mb-2 mt-1" th:text="${recipe.ingredients}">データなし</p>
+                    <strong><i class="bi bi-list-ol me-1"></i> 作り方:</strong>
+                    <p class="mb-0 mt-1" th:text="${recipe.instructions}" style="white-space: pre-wrap;">データなし</p>
                   </div>
                 </div>
               </div>
@@ -285,33 +407,31 @@
         tab.show();
       }
 
-      // --- 検索・フィルター ---
+      // --- 検索・フィルター (card grid版) ---
       const searchInput = document.getElementById('foodSearchInput');
       const filterButtons = document.querySelectorAll('.status-filter-btn');
-      const rows = document.querySelectorAll('#foods tbody tr');
+      const cardCols = document.querySelectorAll('.food-card-col');
       const noResultsMessage = document.getElementById('noResultsMessage');
       let currentStatusFilter = 'all';
 
       function applyFilters() {
         const keyword = (searchInput.value || '').trim().toLowerCase();
         let visibleCount = 0;
-        rows.forEach(function(row) {
-          const name = (row.getAttribute('data-name') || '').toLowerCase();
-          const status = row.getAttribute('data-status');
+        cardCols.forEach(function(col) {
+          const name = (col.getAttribute('data-name') || '').toLowerCase();
+          const status = col.getAttribute('data-status');
           const matchesKeyword = name.includes(keyword);
           const matchesStatus = currentStatusFilter === 'all' || status === currentStatusFilter;
           const visible = matchesKeyword && matchesStatus;
-          row.style.display = visible ? '' : 'none';
+          col.style.display = visible ? '' : 'none';
           if (visible) visibleCount++;
         });
         if (noResultsMessage) {
-          noResultsMessage.style.display = (visibleCount === 0 && rows.length > 0) ? 'block' : 'none';
+          noResultsMessage.style.display = (visibleCount === 0 && cardCols.length > 0) ? 'block' : 'none';
         }
       }
 
-      if (searchInput) {
-        searchInput.addEventListener('input', applyFilters);
-      }
+      if (searchInput) searchInput.addEventListener('input', applyFilters);
       filterButtons.forEach(function(btn) {
         btn.addEventListener('click', function() {
           filterButtons.forEach(function(b) { b.classList.remove('active'); });
@@ -394,7 +514,6 @@
             if (csrfToken && csrfHeaderName) {
               const input = document.createElement('input');
               input.type = 'hidden';
-              // ヘッダー名はCookie/フォーム送信では使わずパラメータ名 _csrf を使う
               input.name = '_csrf';
               input.value = csrfToken;
               form.appendChild(input);
